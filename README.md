@@ -63,7 +63,7 @@ Tags = [
 ]
 ```
 
-## Tested Operating System
+## Tested Operating Systems
 
 | Name | Api Slug |
 | :--: |:-------: |
