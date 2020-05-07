@@ -63,6 +63,18 @@ Tags = [
 ]
 ```
 
+## Tested Operating System
+
+| Name | Api Slug |
+| :--: |:-------: |
+| CentOS 7 | centos_7 |
+| CentOS 8 | centos_8 |
+| RedHat Enterprise Linux 7 | rhel_7 |
+| RedHat Enterprise Linux 8 | rhel_8 |
+| Ubuntu 16.04 | ubuntu_16_04 |
+| Ubuntu 18.04 | ubuntu_18_04 |
+| Ubutnu 20.04 | ubuntu_20_04 |
+
 ## Variables
 | Variable Name | Type | Default Value | Description |
 | :-----------: |:---: | :------------:|:------------|
@@ -75,3 +87,18 @@ Tags = [
 | operating_system | string | ubuntu_18_04 | The  Operating  system  of  the  node |
 | billing_cycle | string | hourly | How  the  node  will  be  billed (Not  usually  changed) |
 | private_subnet | string | 192.168.1.0/24 | Private  IP  Space  to  use  for  Layer2 |
+
+## Testing script
+I had the need to see if my terraform script would work on each operating system. So I wrote ***test_matrix.sh*** to handle this for me. This script has a bunch of operating systems in a list and will execute the terraform scripts into folder for each OS. The output of the terraform script is stored in that dedicated directory in a file called terraform.log.
+
+To run this script simply do the following:
+```bash
+./test_matrix.sh apply
+```
+Once you are finished, you can tear it all down as follows:
+```bash
+./test_matrix.sh destroy
+```
+
+Enjoy!
+
