@@ -67,11 +67,8 @@ Tags = [
 
 | Name | Api Slug |
 | :--: |:-------: |
-| CentOS 7 | centos_7 |
 | CentOS 8 | centos_8 |
-| RedHat Enterprise Linux 7 | rhel_7 |
 | RedHat Enterprise Linux 8 | rhel_8 |
-| Ubuntu 16.04 | ubuntu_16_04 |
 | Ubuntu 18.04 | ubuntu_18_04 |
 | Ubutnu 20.04 | ubuntu_20_04 |
 
