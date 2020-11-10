@@ -73,3 +73,41 @@ resource "null_resource" "write_ssh_private_key" {
     inline = ["chmod 0400 /root/.ssh/id_rsa"]
   }
 }
+
+data "template_file" "deploy_anthos_cluster" {
+  template = file("templates/deploy_cluster.sh")
+  vars = {
+    cluster_name = var.cluster_name
+  }
+}
+resource "null_resource" "deploy_anthos_cluster" {
+  connection {
+    type        = "ssh"
+    user        = "root"
+    private_key = chomp(tls_private_key.ssh_key_pair.private_key_pem)
+    host        = packet_device.baremetal_anthos.0.access_public_ipv4
+  }
+
+  provisioner "remote-exec" {
+    inline = ["mkdir -p /root/baremetal/keys/"]
+  }
+
+  provisioner "file" {
+    source      = "util/keys/"
+    destination = "/root/baremetal/keys"
+  }
+
+  provisioner "file" {
+    content     = data.template_file.deploy_anthos_cluster.rendered
+    destination = "/root/baremetal/deploy_cluster.sh"
+  }
+
+  provisioner "remote-exec" {
+    inline = ["bash /root/baremetal/deploy_cluster.sh"]
+  }
+}
+
+# TODO: We need to move the bmctl create step to another null resource so that it can wait for node creation and vlan attachment
+#       Get rid of hard coded IP assingments in deploy_cluster.sh
+#       Break the hosts into 3x groups (Bastion, Control Plane, Workers) and name them accordingly
+

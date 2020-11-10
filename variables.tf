@@ -16,7 +16,7 @@ variable "hostname" {
 
 variable "facility" {
   type        = string
-  default     = "sv15"
+  default     = "ny5"
   description = "Packet Facility to deploy into"
 }
 
@@ -29,7 +29,7 @@ variable "plan" {
 variable "node_count" {
   type        = number
   description = "Number of baremetal nodes"
-  default     = 2
+  default     = 7
 }
 
 variable "operating_system" {
@@ -48,4 +48,10 @@ variable "private_subnet" {
   type        = string
   description = "Private IP Space to use for Layer2"
   default     = "172.29.254.0/24"
+}
+
+variable "cluster_name" {
+  type        = string
+  description = "The GKE cluster name"
+  default     = "packet-gke-cluster"
 }
