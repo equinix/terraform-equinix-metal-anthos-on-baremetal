@@ -5,8 +5,8 @@ Terraform is just a single binary.  Visit their [download page](https://www.terr
  
 Here is an example for **macOS**: 
 ```bash 
-curl -LO https://releases.hashicorp.com/terraform/0.12.18/terraform_0.12.18_darwin_amd64.zip 
-unzip terraform_0.12.18_darwin_amd64.zip 
+curl -LO https://releases.hashicorp.com/terraform/0.12.29/terraform_0.12.29_darwin_amd64.zip 
+unzip terraform_0.12.29_darwin_amd64.zip 
 chmod +x terraform 
 sudo mv terraform /usr/local/bin/ 
 ``` 
@@ -37,7 +37,7 @@ terraform apply --auto-approve
 ```
 Once this is complete you should get output similar to this:
 ```
-Apply complete! Resources: 5 added, 0 changed, 0 destroyed.
+Apply complete! Resources: 10 added, 0 changed, 0 destroyed.
 
 Outputs:
 
@@ -46,19 +46,19 @@ Hostnames = [
   "anthos-baremetal-02",
 ]
 Public_IPs = [
-  "147.75.69.143",
-  "147.75.70.22",
+  "136.144.55.145",
+  "136.144.55.213",
 ]
 Tags = [
   [
     "anthos",
     "baremetal",
-    "192.168.1.1",
+    "172.29.254.1",
   ],
   [
     "anthos",
     "baremetal",
-    "192.168.1.2",
+    "172.29.254.2",
   ],
 ]
 ```
@@ -78,12 +78,12 @@ Tags = [
 | auth_token | string | n/a | Packet API Key |
 | project_id | string | n/a | Packet Project ID |
 | hostname | string | anthos-baremetal | The hostname for nodes |
-| facility | string | sjc1 | Packet  Facility  to  deploy  into |
-| plan | string | c2.medium.x86 | Packet  device  type  to  deploy |
+| facility | string | sv15 | Packet  Facility  to  deploy  into |
+| plan | string | c3.small.x86 | Packet  device  type  to  deploy |
 | node_count | number | 2 | Number  of  baremetal  nodes |
-| operating_system | string | ubuntu_18_04 | The  Operating  system  of  the  node |
+| operating_system | string | ubuntu_20_04 | The  Operating  system  of  the  node |
 | billing_cycle | string | hourly | How  the  node  will  be  billed (Not  usually  changed) |
-| private_subnet | string | 192.168.1.0/24 | Private  IP  Space  to  use  for  Layer2 |
+| private_subnet | string | 172.29.254.0/24 | Private  IP  Space  to  use  for  Layer2 |
 
 ## Testing script
 I had the need to see if my terraform script would work on each operating system. So I wrote ***test_matrix.sh*** to handle this for me. This script has a bunch of operating systems in a list and will execute the terraform scripts into folder for each OS. The output of the terraform script is stored in that dedicated directory in a file called terraform.log.
