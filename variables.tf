@@ -26,10 +26,16 @@ variable "plan" {
   description = "Packet device type to deploy"
 }
 
-variable "node_count" {
+variable "ha_control_plane" {
+  type        = bool
+  description = "Do you want a highly available control plane"
+  default     = true
+}
+
+variable "worker_count" {
   type        = number
-  description = "Number of baremetal nodes"
-  default     = 7
+  description = "Number of baremetal worker nodes"
+  default     = 3
 }
 
 variable "operating_system" {
@@ -53,5 +59,5 @@ variable "private_subnet" {
 variable "cluster_name" {
   type        = string
   description = "The GKE cluster name"
-  default     = "packet-gke-cluster"
+  default     = "equinix-metal-gke-cluster"
 }
