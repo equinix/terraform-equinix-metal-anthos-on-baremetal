@@ -35,7 +35,7 @@ sed -i "s|<path to SSH private key, used for node access>|/root/.ssh/id_rsa|g" /
 sed -i "s|<path to Connect agent service account key>|/root/baremetal/keys/connect.json|g" /root/baremetal/bmctl-workspace/$CLUSTER_NAME/$CLUSTER_NAME.yaml
 sed -i "s|<path to Hub registration service account key>|/root/baremetal/keys/register.json|g" /root/baremetal/bmctl-workspace/$CLUSTER_NAME/$CLUSTER_NAME.yaml
 sed -i "s|<path to Cloud Operations service account key>|/root/baremetal/keys/cluster-ops.json|g" /root/baremetal/bmctl-workspace/$CLUSTER_NAME/$CLUSTER_NAME.yaml
-GCP_PROJECT_ID=`grep 'project_id' /root/baremetal/keys/gcr.json | awk -F'"' '{print $4}'`
+GCP_PROJECT_ID=`grep 'project_id' /root/baremetal/keys/register.json | awk -F'"' '{print $4}'`
 sed -i "s|type: admin|type: hybrid|g" /root/baremetal/bmctl-workspace/$CLUSTER_NAME/$CLUSTER_NAME.yaml
 sed -i "s|<GCP project ID>|$GCP_PROJECT_ID|g" /root/baremetal/bmctl-workspace/$CLUSTER_NAME/$CLUSTER_NAME.yaml
 sed -i "s|  - address: <Machine 3 IP>||g" /root/baremetal/bmctl-workspace/$CLUSTER_NAME/$CLUSTER_NAME.yaml

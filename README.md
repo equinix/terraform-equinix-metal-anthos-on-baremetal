@@ -9,7 +9,7 @@ cd baremetal-anthos
 ```
 
 ## Generate your GCP Keys
-There is a helper script in the `util` directory named `setup_gcp_project.sh` you will need. The Google Cloud SDK installed to run this, and you'll most likley need to have the `Project Owner Role`.
+There is a helper script in the `util` directory named `setup_gcp_project.sh`. You will need. The Google Cloud SDK installed to run this, and you'll most likley need to have the `Project Owner Role`.
 
 Once your keys are generated you should have a folder named `keys` in the `util` directory with the following files:
 ```
@@ -41,12 +41,12 @@ sudo mv terraform /usr/local/bin/
 rm -f terraform_0.12.29_linux_amd64.zip
 ```
 ## Modify your variables 
-You will need to set three variables at a minimum and there are a lot more you may wish to modify in `variables.tf`
+You will need to set two variables at a minimum and there are a lot more you may wish to modify in `variables.tf`. This file must be created in your `baremetal-anthos` directory
 ```bash 
 cat <<EOF >terraform.tfvars 
-auth_token = "cefa5c94e8ee4577bff81d1edca93ed8" 
-project_id = "42259e34-d300-48b3-b3e1-d5165cd14169" 
-EOF 
+auth_token = "<enter your Project API token here>"
+project_id = "<enter your Packet Project ID here>"
+EOF
 ``` 
 There are a lot more variables that can be modified in the `variables.tf` file. Those variables are documented below.
 
