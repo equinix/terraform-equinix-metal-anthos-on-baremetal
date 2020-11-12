@@ -12,6 +12,9 @@ resource "random_string" "cluster_suffix" {
 locals {
   master_count = var.ha_control_plane ? 3 : 1
   cluster_name = format("%s-%s", var.cluster_name, random_string.cluster_suffix.result)
+  timestamp           = "${timestamp()}"
+  timestamp_sanitized = "${replace("${local.timestamp}", "/[- TZ:]/", "")}" 
+  ssh_key_name        = "bm-cluster-${local.timestamp_sanitized}"
 }
 
 resource "packet_vlan" "private_vlan" {
@@ -23,6 +26,12 @@ resource "packet_vlan" "private_vlan" {
 resource "tls_private_key" "ssh_key_pair" {
   algorithm = "RSA"
   rsa_bits  = 4096
+}
+
+resource "local_file" "cluster_private_key_pem" {
+  content         = chomp(tls_private_key.ssh_key_pair.private_key_pem)
+  filename        = pathexpand("~/.ssh/${local.ssh_key_name}")
+  file_permission = "0600"
 }
 
 resource "packet_ssh_key" "ssh_pub_key" {
