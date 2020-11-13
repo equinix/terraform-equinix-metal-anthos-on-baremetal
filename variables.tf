@@ -20,10 +20,22 @@ variable "facility" {
   description = "Packet Facility to deploy into"
 }
 
-variable "plan" {
+variable "bastion_plan" {
   type        = string
   default     = "c3.small.x86"
-  description = "Packet device type to deploy"
+  description = "Packet device type to deploy for bastion host"
+}
+
+variable "cp_plan" {
+  type        = string
+  default     = "c3.small.x86"
+  description = "Packet device type to deploy control plane nodes"
+}
+
+variable "worker_plan" {
+  type        = string
+  default     = "c3.small.x86"
+  description = "Packet device type to deploy for worker nodes"
 }
 
 variable "ha_control_plane" {

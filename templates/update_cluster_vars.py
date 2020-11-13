@@ -31,5 +31,6 @@ os.system("sed -i 's|      - address: <Machine 1 IP>|{}|g' {}".format(master_str
 os.system("sed -i 's|  - address: <Machine 2 IP>|{}|g' {}".format(worker_string,
           file_path).encode("unicode_escape").decode("utf-8"))
 os.system("sed -i 's|controlPlaneVIP: 10.0.0.8|controlPlaneVIP: {}|g' {}".format(cluster_vip, file_path))
-os.system("sed -i 's|ingressVIP: 10.0.0.2|ingressVIP: {}|g' {}".format(ingress_vip, file_path))
-os.system("sed -i 's|10.0.0.1-10.0.0.4|{}|g' {}".format(lb_vip_range, file_path))
+os.system("sed -i 's|# ingressVIP: 10.0.0.2|ingressVIP: {}|g' {}".format(ingress_vip, file_path))
+os.system("sed -i 's|#   - 10.0.0.1-10.0.0.4|  - {}|g' {}".format(lb_vip_range, file_path))
+

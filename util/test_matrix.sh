@@ -1,7 +1,8 @@
 #!/bin/bash
 operating_systems=('ubuntu_18_04' 'ubuntu_20_04' 'centos_8' 'rhel_8')
-
+cd ..
 if [ "$1" = "apply" ]; then
+
     for os in "${operating_systems[@]}"; do
         mkdir -p $os
         short_name=`echo $os |sed "s/_//g"`
