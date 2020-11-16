@@ -225,7 +225,7 @@ resource "null_resource" "deploy_anthos_cluster" {
       "python3 /root/baremetal/update_cluster_vars.py",
       "cd /root/baremetal/",
       "export GOOGLE_APPLICATION_CREDENTIALS=/root/baremetal/keys/super-admin.json",
-      "/root/baremetal/bmctl create cluster -c ${local.cluster_name}"
+      "/root/baremetal/bmctl create cluster -c ${local.cluster_name} --force"
     ]
   }
 }

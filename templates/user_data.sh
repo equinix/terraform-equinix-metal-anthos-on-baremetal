@@ -38,6 +38,7 @@ function sync_time {
     systemctl stop ntp.service
     ntpd -gq
     systemctl start ntp.service
+    timedatectl > /tmp/timedatctl.txt
 }
 
 
