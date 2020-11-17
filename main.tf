@@ -64,7 +64,7 @@ resource "packet_device" "bastion_host" {
     packet_ssh_key.ssh_pub_key
   ]
   hostname         = format("%s-bastion", local.cluster_name)
-  plan             = var.plan
+  plan             = var.bastion_plan
   facilities       = [var.facility]
   operating_system = var.operating_system
   billing_cycle    = var.billing_cycle
@@ -79,7 +79,7 @@ resource "packet_device" "control_plane" {
   ]
   count            = local.master_count
   hostname         = format("%s-cp-%02d", local.cluster_name, count.index + 1)
-  plan             = var.plan
+  plan             = var.cp_plan
   facilities       = [var.facility]
   operating_system = var.operating_system
   billing_cycle    = var.billing_cycle
@@ -94,7 +94,7 @@ resource "packet_device" "worker_nodes" {
   ]
   count            = var.worker_count
   hostname         = format("%s-worker-%02d", local.cluster_name, count.index + 1)
-  plan             = var.plan
+  plan             = var.worker_plan
   facilities       = [var.facility]
   operating_system = var.operating_system
   billing_cycle    = var.billing_cycle
@@ -225,7 +225,7 @@ resource "null_resource" "deploy_anthos_cluster" {
       "python3 /root/baremetal/update_cluster_vars.py",
       "cd /root/baremetal/",
       "export GOOGLE_APPLICATION_CREDENTIALS=/root/baremetal/keys/super-admin.json",
-      "/root/baremetal/bmctl create cluster -c ${local.cluster_name}"
+      "/root/baremetal/bmctl create cluster -c ${local.cluster_name} --force"
     ]
   }
 }

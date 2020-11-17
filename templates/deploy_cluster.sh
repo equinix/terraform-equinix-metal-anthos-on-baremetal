@@ -22,7 +22,7 @@ sudo mv kubectl /usr/local/bin/
 # Download bmctl
 cd /root/baremetal
 gcloud auth activate-service-account --key-file=keys/gcr.json
-gsutil cp gs://anthos-baremetal-release/bmctl/0.6.0-gke.2/linux/bmctl .
+gsutil cp gs://anthos-baremetal-release/bmctl/0.7.0-gke.0/linux/bmctl .
 chmod a+x bmctl
 
 # Generate boilerplate cluster config
@@ -39,3 +39,7 @@ GCP_PROJECT_ID=`grep 'project_id' /root/baremetal/keys/register.json | awk -F'"'
 sed -i "s|type: admin|type: hybrid|g" /root/baremetal/bmctl-workspace/$CLUSTER_NAME/$CLUSTER_NAME.yaml
 sed -i "s|<GCP project ID>|$GCP_PROJECT_ID|g" /root/baremetal/bmctl-workspace/$CLUSTER_NAME/$CLUSTER_NAME.yaml
 sed -i "s|  - address: <Machine 3 IP>||g" /root/baremetal/bmctl-workspace/$CLUSTER_NAME/$CLUSTER_NAME.yaml
+sed -i "s|    # addressPools:|    addressPools:|g" /root/baremetal/bmctl-workspace/$CLUSTER_NAME/$CLUSTER_NAME.yaml
+sed -i "s|    # - name: pool1|    - name: pool1|g" /root/baremetal/bmctl-workspace/$CLUSTER_NAME/$CLUSTER_NAME.yaml
+sed -i "s|    #   addresses:|      addresses:|g" /root/baremetal/bmctl-workspace/$CLUSTER_NAME/$CLUSTER_NAME.yaml
+

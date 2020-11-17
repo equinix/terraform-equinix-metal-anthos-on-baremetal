@@ -34,6 +34,15 @@ function unknown_config {
     echo "I don't konw who I am" > /root/who_am_i.txt
 }
 
+function sync_time {
+    systemctl stop ntp.service
+    ntpd -gq
+    systemctl start ntp.service
+    timedatectl > /tmp/timedatctl.txt
+}
+
+
+sync_time
 
 if [ "$${OS:0:6}" = "centos" ] || [ "$${OS:0:4}" = "rhel" ]; then
     rhel_config
@@ -42,3 +51,4 @@ elif [ "$${OS:0:6}" = "ubuntu" ]; then
 else
     unknown_config
 fi
+
