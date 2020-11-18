@@ -71,7 +71,7 @@ Bastion_Tags = [
   "baremetal",
   "172.29.254.1",
 ]
-Contorl_Plane_Public_IPs = [
+Control_Plane_Public_IPs = [
   "145.40.65.89",
   "145.40.65.95",
   "145.40.65.123",

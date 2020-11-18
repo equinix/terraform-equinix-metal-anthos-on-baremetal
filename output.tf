@@ -18,7 +18,7 @@ output "Bastion_Public_IP" {
   description = "Bastion Host Public IP"
 }
 
-output "Contorl_Plane_Public_IPs" {
+output "Control_Plane_Public_IPs" {
   value       = packet_device.control_plane.*.access_public_ipv4
   description = "Control Plane Public IPs"
 }
