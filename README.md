@@ -34,21 +34,21 @@ Terraform is just a single binary. Visit their [download page](https://www.terra
 Here is an example for **macOS**:
 
 ```bash
-curl -LO https://releases.hashicorp.com/terraform/0.12.29/terraform_0.12.29_darwin_amd64.zip
-unzip terraform_0.12.29_darwin_amd64.zip
+curl -LO https://releases.hashicorp.com/terraform/0.13.5/terraform_0.13.5_darwin_amd64.zip
+unzip terraform_0.13.5_darwin_amd64.zip
 chmod +x terraform
 sudo mv terraform /usr/local/bin/
-rm -f terraform_0.12.29_darwin_amd64.zip
+rm -f terraform_0.13.5_darwin_amd64.zip
 ```
 
 Here is an example for **Linux**:
 
 ```bash
-curl -LO https://releases.hashicorp.com/terraform/0.12.29/terraform_0.12.29_linux_amd64.zip
-unzip terraform_0.12.29_linux_amd64.zip
+curl -LO https://releases.hashicorp.com/terraform/0.13.5/terraform_0.13.5_linux_amd64.zip
+unzip terraform_0.13.5_linux_amd64.zip
 chmod +x terraform
 sudo mv terraform /usr/local/bin/
-rm -f terraform_0.12.29_linux_amd64.zip
+rm -f terraform_0.13.5_linux_amd64.zip
 ```
 
 ## Modify your variables
