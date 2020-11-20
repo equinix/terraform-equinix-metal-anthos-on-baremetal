@@ -81,7 +81,7 @@ Apply complete! Resources: 27 added, 0 changed, 0 destroyed.
 
 Outputs:
 
-Bastion_Hostname = packet-gke-cluster-bastion
+Bastion_Hostname = hostname-1x2yz-bastion
 Bastion_Public_IP = 145.40.65.153
 Bastion_Tags = [
   "bastion",
@@ -95,9 +95,9 @@ Control_Plane_Public_IPs = [
   "145.40.65.123",
 ]
 Control_Plane_Hostnames = [
-  "packet-gke-cluster-cp-01",
-  "packet-gke-cluster-cp-02",
-  "packet-gke-cluster-cp-03",
+  "hostname-1x2yz-cp-01",
+  "hostname-1x2yz-cp-02",
+  "hostname-1x2yz-cp-03",
 ]
 Control_Plane_Tags = [
   [
@@ -117,9 +117,9 @@ Control_Plane_Tags = [
   ],
 ]
 Worker_Node_Hostnames = [
-  "packet-gke-cluster-worker-01",
-  "packet-gke-cluster-worker-02",
-  "packet-gke-cluster-worker-03",
+  "hostname-1x2yz-worker-01",
+  "hostname-1x2yz-worker-02",
+  "hostname-1x2yz-worker-03",
 ]
 Worker_Node_Tags = [
   [
