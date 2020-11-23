@@ -20,12 +20,6 @@ variable "facility" {
   description = "Equinix Metal Facility to deploy into"
 }
 
-variable "bastion_plan" {
-  type        = string
-  default     = "c3.small.x86"
-  description = "Equinix Metal device type to deploy for bastion host"
-}
-
 variable "cp_plan" {
   type        = string
   default     = "c3.small.x86"

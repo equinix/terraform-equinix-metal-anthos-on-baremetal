@@ -22,7 +22,7 @@ sudo mv kubectl /usr/local/bin/
 # Download bmctl
 cd /root/baremetal
 gcloud auth activate-service-account --key-file=keys/gcr.json
-gsutil cp gs://anthos-baremetal-release/bmctl/0.7.0-gke.0/linux/bmctl .
+gsutil cp gs://anthos-baremetal-release/bmctl/0.7.0-gke.4/linux/bmctl .
 chmod a+x bmctl
 
 # Generate boilerplate cluster config

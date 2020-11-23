@@ -81,14 +81,6 @@ Apply complete! Resources: 27 added, 0 changed, 0 destroyed.
 
 Outputs:
 
-Bastion_Hostname = hostname-1x2yz-bastion
-Bastion_Public_IP = 145.40.65.153
-Bastion_Tags = [
-  "bastion",
-  "anthos",
-  "baremetal",
-  "172.29.254.1",
-]
 Control_Plane_Public_IPs = [
   "145.40.65.89",
   "145.40.65.95",
