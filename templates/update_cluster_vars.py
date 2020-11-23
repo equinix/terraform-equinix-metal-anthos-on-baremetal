@@ -13,10 +13,10 @@ master_string = ''
 worker_string = ''
 
 for i in range(0, NUM_MASTERS):
-    master_string += "      - address: {}\n".format(list(ipaddress.ip_network(PRIV_SUBNET).hosts())[i+1].compressed)
+    master_string += "      - address: {}\n".format(list(ipaddress.ip_network(PRIV_SUBNET).hosts())[i].compressed)
 
 for i in range(NUM_MASTERS, num_total):
-    worker_string += "  - address: {}\n".format(list(ipaddress.ip_network(PRIV_SUBNET).hosts())[i+1].compressed)
+    worker_string += "  - address: {}\n".format(list(ipaddress.ip_network(PRIV_SUBNET).hosts())[i].compressed)
 
 cluster_vip = list(ipaddress.ip_network(PRIV_SUBNET).hosts())[-1].compressed
 ingress_vip = list(ipaddress.ip_network(PRIV_SUBNET).hosts())[-2].compressed
