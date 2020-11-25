@@ -30,6 +30,7 @@ CLUSTER_NAME="${cluster_name}"
 ./bmctl create config -c $CLUSTER_NAME
 
 # Replace variables in cluster config
+sed -i "/Node pool configuration is only valid for 'bundled' LB mode./,+4 d" /root/baremetal/bmctl-workspace/$CLUSTER_NAME/$CLUSTER_NAME.yaml
 sed -i "s|<path to GCR service account key>|/root/baremetal/keys/gcr.json|g" /root/baremetal/bmctl-workspace/$CLUSTER_NAME/$CLUSTER_NAME.yaml
 sed -i "s|<path to SSH private key, used for node access>|/root/.ssh/id_rsa|g" /root/baremetal/bmctl-workspace/$CLUSTER_NAME/$CLUSTER_NAME.yaml
 sed -i "s|<path to Connect agent service account key>|/root/baremetal/keys/connect.json|g" /root/baremetal/bmctl-workspace/$CLUSTER_NAME/$CLUSTER_NAME.yaml

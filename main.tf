@@ -10,8 +10,11 @@ resource "random_string" "cluster_suffix" {
 }
 
 locals {
-  master_count = var.ha_control_plane ? 3 : 1
-  cluster_name = format("%s-%s", var.cluster_name, random_string.cluster_suffix.result)
+  cp_count            = var.ha_control_plane ? 3 : 1
+  cluster_name        = format("%s-%s", var.cluster_name, random_string.cluster_suffix.result)
+  timestamp           = timestamp()
+  timestamp_sanitized = replace(local.timestamp, "/[- TZ:]/", "")
+  ssh_key_name        = format("bm-cluster-%s", local.timestamp_sanitized)
 }
 
 resource "packet_vlan" "private_vlan" {
@@ -30,8 +33,14 @@ resource "packet_ssh_key" "ssh_pub_key" {
   public_key = chomp(tls_private_key.ssh_key_pair.public_key_openssh)
 }
 
+resource "local_file" "cluster_private_key_pem" {
+  content         = chomp(tls_private_key.ssh_key_pair.private_key_pem)
+  filename        = pathexpand(format("~/.ssh/%s", local.ssh_key_name))
+  file_permission = "0600"
+}
+
 data "template_file" "control_plane_user_data" {
-  count    = local.master_count
+  count    = local.cp_count
   template = file("templates/user_data.sh")
   vars = {
     operating_system = var.operating_system
@@ -45,7 +54,7 @@ data "template_file" "worker_user_data" {
   template = file("templates/user_data.sh")
   vars = {
     operating_system = var.operating_system
-    ip_address       = cidrhost(var.private_subnet, local.master_count + count.index + 1)
+    ip_address       = cidrhost(var.private_subnet, local.cp_count + count.index + 1)
     netmask          = cidrnetmask(var.private_subnet)
   }
 }
@@ -54,7 +63,7 @@ resource "packet_device" "control_plane" {
   depends_on = [
     packet_ssh_key.ssh_pub_key
   ]
-  count            = local.master_count
+  count            = local.cp_count
   hostname         = format("%s-cp-%02d", local.cluster_name, count.index + 1)
   plan             = var.cp_plan
   facilities       = [var.facility]
@@ -76,12 +85,12 @@ resource "packet_device" "worker_nodes" {
   operating_system = var.operating_system
   billing_cycle    = var.billing_cycle
   project_id       = var.project_id
-  tags             = ["anthos", "baremetal", cidrhost(var.private_subnet, local.master_count + count.index + 1)]
+  tags             = ["anthos", "baremetal", cidrhost(var.private_subnet, local.cp_count + count.index + 1)]
   user_data        = element(data.template_file.worker_user_data.*.rendered, count.index)
 }
 
 resource "packet_device_network_type" "control_plane" {
-  count     = local.master_count
+  count     = local.cp_count
   device_id = element(packet_device.control_plane.*.id, count.index)
   type      = "hybrid"
 }
@@ -93,7 +102,7 @@ resource "packet_device_network_type" "worker_nodes" {
 }
 
 resource "packet_port_vlan_attachment" "control_plane_vlan_attach" {
-  count     = local.master_count
+  count     = local.cp_count
   device_id = element(packet_device_network_type.control_plane.*.id, count.index)
   port_name = "eth1"
   vlan_vnid = packet_vlan.private_vlan.vxlan
@@ -134,7 +143,7 @@ data "template_file" "update_cluster_vars" {
   template = file("templates/update_cluster_vars.py")
   vars = {
     private_subnet = var.private_subnet
-    master_count   = local.master_count
+    cp_count       = local.cp_count
     worker_count   = var.worker_count
     cluster_name   = local.cluster_name
   }

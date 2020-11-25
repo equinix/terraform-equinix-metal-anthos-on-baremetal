@@ -27,3 +27,9 @@ output "Worker_Node_Tags" {
   value       = packet_device.worker_nodes.*.tags
   description = "Worker Node Tags"
 }
+
+output "ssh_key_lcation" {
+  value       = local_file.cluster_private_key_pem.filename
+  description = "The SSH Private Key File Location"
+}
+
