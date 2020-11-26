@@ -145,7 +145,7 @@ Worker_Public_IPs = [
 |       Ubuntu 18.04        | ubuntu_18_04 |
 |       Ubutnu 20.04        | ubuntu_20_04 |
 
-## Operating Systems That need fixing
+## Operating Systems that need fixing
 |           Name             |   Api Slug   |
 | :-----------------------:  | :----------: |
 | Red Hat Enterprise Linux 8 |    rhel_8    |
