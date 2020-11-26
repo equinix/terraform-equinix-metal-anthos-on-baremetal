@@ -28,7 +28,7 @@ output "Worker_Node_Tags" {
   description = "Worker Node Tags"
 }
 
-output "ssh_key_lcation" {
+output "ssh_key_location" {
   value       = local_file.cluster_private_key_pem.filename
   description = "The SSH Private Key File Location"
 }

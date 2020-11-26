@@ -133,9 +133,10 @@ resource "null_resource" "write_ssh_private_key" {
 }
 
 data "template_file" "deploy_anthos_cluster" {
-  template = file("templates/deploy_cluster.sh")
+  template = file("templates/pre_reqs.sh")
   vars = {
-    cluster_name = local.cluster_name
+    cluster_name     = local.cluster_name
+    operating_system = var.operating_system
   }
 }
 
@@ -168,7 +169,7 @@ resource "null_resource" "prep_anthos_cluster" {
 
   provisioner "file" {
     content     = data.template_file.deploy_anthos_cluster.rendered
-    destination = "/root/baremetal/deploy_cluster.sh"
+    destination = "/root/baremetal/pre_reqs.sh"
   }
 
   provisioner "file" {
@@ -177,7 +178,7 @@ resource "null_resource" "prep_anthos_cluster" {
   }
 
   provisioner "remote-exec" {
-    inline = ["bash /root/baremetal/deploy_cluster.sh"]
+    inline = ["bash /root/baremetal/pre_reqs.sh"]
   }
 }
 
