@@ -142,9 +142,14 @@ Worker_Public_IPs = [
 |           Name            |   Api Slug   |
 | :-----------------------: | :----------: |
 |         CentOS 8          |   centos_8   |
-| RedHat Enterprise Linux 8 |    rhel_8    |
 |       Ubuntu 18.04        | ubuntu_18_04 |
 |       Ubutnu 20.04        | ubuntu_20_04 |
+
+## Operating Systems That need fixing
+|           Name             |   Api Slug   |
+| :-----------------------:  | :----------: |
+| Red Hat Enterprise Linux 8 |    rhel_8    |
+
 
 ## Variables
 
