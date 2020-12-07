@@ -1,6 +1,11 @@
 #!/bin/bash
 CLUSTER_NAME='${cluster_name}'
 OS='${operating_system}'
+CP_VIP='${cp_vip}'
+INGRESS_VIP='${ingress_vip}'
+IFS=' ' read -r -a CP_IPS <<< '${cp_ips}'
+IFS=' ' read -r -a WORKER_IPS <<< '${worker_ips}'
+
 
 function ubuntu_pre_reqs {
     # Install Docker
@@ -61,26 +66,45 @@ curl -LO "https://storage.googleapis.com/kubernetes-release/release/v1.18.6/bin/
 chmod a+x kubectl
 sudo mv kubectl /usr/local/bin/
 
+# Assing CP VIP to first master node's lo interface
+export EIP=$CP_VIP
+ip add add $EIP/32 dev lo
+
 # Download bmctl
 cd /root/baremetal
 gcloud auth activate-service-account --key-file=keys/gcr.json
-gsutil cp gs://anthos-baremetal-release/bmctl/0.7.0-gke.6/linux/bmctl .
+gsutil cp gs://anthos-baremetal-release/bmctl/1.6.0/linux-amd64/bmctl .
 chmod a+x bmctl
 
 ./bmctl create config -c $CLUSTER_NAME
+bmctl_workspace='/root/baremetal/bmctl-workspace'
+cluster_config="$bmctl_workspace/$CLUSTER_NAME/$CLUSTER_NAME.yaml"
+GCP_PROJECT_ID=`grep 'project_id' /root/baremetal/keys/register.json | awk -F'"' '{print $4}'`
+#for i in "$${CP_IPS[@]}"; do
+#   cp_string="$cp_string      - address: $i"$'\\n'
+#done
+cp_string="      - address: $${CP_IPS[0]}"$'\\n'
+for i in "$${WORKER_IPS[@]}"; do
+   worker_string="$worker_string  - address: $i"$'\\n'
+done
 
 # Replace variables in cluster config
-sed -i "/Node pool configuration is only valid for 'bundled' LB mode./,+4 d" /root/baremetal/bmctl-workspace/$CLUSTER_NAME/$CLUSTER_NAME.yaml
-sed -i "s|<path to GCR service account key>|/root/baremetal/keys/gcr.json|g" /root/baremetal/bmctl-workspace/$CLUSTER_NAME/$CLUSTER_NAME.yaml
-sed -i "s|<path to SSH private key, used for node access>|/root/.ssh/id_rsa|g" /root/baremetal/bmctl-workspace/$CLUSTER_NAME/$CLUSTER_NAME.yaml
-sed -i "s|<path to Connect agent service account key>|/root/baremetal/keys/connect.json|g" /root/baremetal/bmctl-workspace/$CLUSTER_NAME/$CLUSTER_NAME.yaml
-sed -i "s|<path to Hub registration service account key>|/root/baremetal/keys/register.json|g" /root/baremetal/bmctl-workspace/$CLUSTER_NAME/$CLUSTER_NAME.yaml
-sed -i "s|<path to Cloud Operations service account key>|/root/baremetal/keys/cluster-ops.json|g" /root/baremetal/bmctl-workspace/$CLUSTER_NAME/$CLUSTER_NAME.yaml
-GCP_PROJECT_ID=`grep 'project_id' /root/baremetal/keys/register.json | awk -F'"' '{print $4}'`
-sed -i "s|type: admin|type: hybrid|g" /root/baremetal/bmctl-workspace/$CLUSTER_NAME/$CLUSTER_NAME.yaml
-sed -i "s|<GCP project ID>|$GCP_PROJECT_ID|g" /root/baremetal/bmctl-workspace/$CLUSTER_NAME/$CLUSTER_NAME.yaml
-sed -i "s|  - address: <Machine 3 IP>||g" /root/baremetal/bmctl-workspace/$CLUSTER_NAME/$CLUSTER_NAME.yaml
-sed -i "s|    # addressPools:|    addressPools:|g" /root/baremetal/bmctl-workspace/$CLUSTER_NAME/$CLUSTER_NAME.yaml
-sed -i "s|    # - name: pool1|    - name: pool1|g" /root/baremetal/bmctl-workspace/$CLUSTER_NAME/$CLUSTER_NAME.yaml
-sed -i "s|    #   addresses:|      addresses:|g" /root/baremetal/bmctl-workspace/$CLUSTER_NAME/$CLUSTER_NAME.yaml
+sed -i "/Node pool configuration is only valid for 'bundled' LB mode./,+4 d" $cluster_config
+sed -i "s|<path to GCR service account key>|/root/baremetal/keys/gcr.json|g" $cluster_config
+sed -i "s|<path to SSH private key, used for node access>|/root/.ssh/id_rsa|g" $cluster_config
+sed -i "s|<path to Connect agent service account key>|/root/baremetal/keys/connect.json|g" $cluster_config
+sed -i "s|<path to Hub registration service account key>|/root/baremetal/keys/register.json|g" $cluster_config
+sed -i "s|<path to Cloud Operations service account key>|/root/baremetal/keys/cluster-ops.json|g" $cluster_config
+sed -i "s|type: admin|type: hybrid|g" $cluster_config
+sed -i "s|<GCP project ID>|$GCP_PROJECT_ID|g" $cluster_config
+sed -i "s|  - address: <Machine 3 IP>||g" $cluster_config
+sed -i "s|mode: bundled|mode: manual|g" $cluster_config
+sed -i "s|controlPlaneLBPort: 443|controlPlaneLBPort: 6444|g" $cluster_config
+sed -i "s|controlPlaneVIP: 10.0.0.8|controlPlaneVIP: $CP_VIP|g" $cluster_config
+sed -i "s|# ingressVIP: 10.0.0.2|ingressVIP: $INGRESS_VIP|g" $cluster_config
+sed -i "s|      - address: <Machine 1 IP>|$cp_string|g" $cluster_config
+sed -i "s|  - address: <Machine 2 IP>|$worker_string|g" $cluster_config
+#sed -i "s|    # addressPools:|    addressPools:|g" $cluster_config
+#sed -i "s|    # - name: pool1|    - name: pool1|g" $cluster_config
+#sed -i "s|    #   addresses:|      addresses:|g" $cluster_config
 
