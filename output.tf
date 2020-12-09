@@ -14,10 +14,10 @@ output "ssh_key_location" {
 }
 
 output "Control_Plane_VIP" {
-  value = cidrhost(packet_reserved_ip_block.cp_vip.cidr_notation, 0) 
+  value       = cidrhost(packet_reserved_ip_block.cp_vip.cidr_notation, 0)
   description = "The Virtual IP for the Control Plane"
 }
 output "Ingress_VIP" {
-  value = cidrhost(packet_reserved_ip_block.ingress_vip.cidr_notation, 0)
+  value       = cidrhost(packet_reserved_ip_block.ingress_vip.cidr_notation, 0)
   description = "The Virtual IP for Ingress"
 }

@@ -29,3 +29,5 @@ override.tf.json
 # example: *tfplan*
 terraform.tfvars
 util/keys
+
+*-kubeconfig

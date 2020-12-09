@@ -125,6 +125,7 @@ data "template_file" "deploy_anthos_cluster" {
     ingress_vip      = cidrhost(packet_reserved_ip_block.ingress_vip.cidr_notation, 0)
     cp_ips           = join(" ", packet_device.control_plane.*.access_public_ipv4)
     worker_ips       = join(" ", packet_device.worker_nodes.*.access_public_ipv4)
+    anthos_ver       = var.anthos_version
   }
 }
 
@@ -184,8 +185,20 @@ data "template_file" "template_kube_vip_install" {
     cluster_name = local.cluster_name
     eip          = cidrhost(packet_reserved_ip_block.cp_vip.cidr_notation, 0)
     count        = count.index
+    kube_vip_ver = var.kube_vip_version
   }
 }
+
+data "template_file" "template_kube_vip_install_workers" {
+  template = file("templates/kube_vip_install.sh")
+  vars = {
+    cluster_name = local.cluster_name
+    eip          = cidrhost(packet_reserved_ip_block.cp_vip.cidr_notation, 0)
+    count        = 3
+    kube_vip_ver = var.kube_vip_version
+  }
+}
+
 
 resource "null_resource" "kube_vip_install_first_cp" {
   depends_on = [
@@ -267,6 +280,69 @@ resource "null_resource" "kube_vip_install_remaining_cp" {
     inline = [
       "bash /root/baremetal/kube_vip_install.sh"
     ]
+  }
+}
+
+resource "null_resource" "kube_vip_install_workers" {
+  count = var.worker_count
+  depends_on = [
+    null_resource.kube_vip_install_remaining_cp
+  ]
+  connection {
+    type        = "ssh"
+    user        = "root"
+    private_key = chomp(tls_private_key.ssh_key_pair.private_key_pem)
+    host        = element(packet_device.worker_nodes.*.access_public_ipv4, count.index)
+  }
+  provisioner "remote-exec" {
+    inline = ["mkdir -p /root/baremetal"]
+  }
+  provisioner "file" {
+    content     = data.template_file.template_kube_vip_install_workers.rendered
+    destination = "/root/baremetal/kube_vip_install.sh"
+  }
+  provisioner "remote-exec" {
+    inline = [
+      "bash /root/baremetal/kube_vip_install.sh"
+    ]
+  }
+}
+
+data "template_file" "ccm_secret" {
+  template = file("templates/ccm_secret.yaml")
+  vars = {
+    auth_token = var.auth_token
+    project_id = local.project_id
+  }
+}
+
+resource "null_resource" "install_ccm" {
+  depends_on = [
+    null_resource.kube_vip_install_workers
+  ]
+  connection {
+    type        = "ssh"
+    user        = "root"
+    private_key = chomp(tls_private_key.ssh_key_pair.private_key_pem)
+    host        = packet_device.control_plane.0.access_public_ipv4
+  }
+  provisioner "file" {
+    content     = data.template_file.ccm_secret.rendered
+    destination = "/root/baremetal/ccm_secret.yaml"
+  }
+  provisioner "remote-exec" {
+    inline = [
+      "kubectl --kubeconfig /root/baremetal/bmctl-workspace/${local.cluster_name}/${local.cluster_name}-kubeconfig apply -f /root/baremetal/ccm_secret.yaml",
+      "kubectl --kubeconfig /root/baremetal/bmctl-workspace/${local.cluster_name}/${local.cluster_name}-kubeconfig apply -f ${var.ccm_deploy_url}"
+    ]
+  }
+}
+
+resource "null_resource" "download_kube_config" {
+  depends_on = [null_resource.deploy_anthos_cluster]
+
+  provisioner "local-exec" {
+    command = "scp -i ~/.ssh/${local.ssh_key_name} -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null  root@${packet_device.control_plane.0.access_public_ipv4}:/root/baremetal/bmctl-workspace/${local.cluster_name}/${local.cluster_name}-kubeconfig ."
   }
 }
 

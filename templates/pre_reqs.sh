@@ -3,6 +3,7 @@ CLUSTER_NAME='${cluster_name}'
 OS='${operating_system}'
 CP_VIP='${cp_vip}'
 INGRESS_VIP='${ingress_vip}'
+ANTHOS_VER='${anthos_ver}'
 IFS=' ' read -r -a CP_IPS <<< '${cp_ips}'
 IFS=' ' read -r -a WORKER_IPS <<< '${worker_ips}'
 
@@ -73,16 +74,13 @@ ip add add $EIP/32 dev lo
 # Download bmctl
 cd /root/baremetal
 gcloud auth activate-service-account --key-file=keys/gcr.json
-gsutil cp gs://anthos-baremetal-release/bmctl/1.6.0/linux-amd64/bmctl .
+gsutil cp gs://anthos-baremetal-release/bmctl/$ANTHOS_VER/linux-amd64/bmctl .
 chmod a+x bmctl
 
 ./bmctl create config -c $CLUSTER_NAME
 bmctl_workspace='/root/baremetal/bmctl-workspace'
 cluster_config="$bmctl_workspace/$CLUSTER_NAME/$CLUSTER_NAME.yaml"
 GCP_PROJECT_ID=`grep 'project_id' /root/baremetal/keys/register.json | awk -F'"' '{print $4}'`
-#for i in "$${CP_IPS[@]}"; do
-#   cp_string="$cp_string      - address: $i"$'\\n'
-#done
 cp_string="      - address: $${CP_IPS[0]}"$'\\n'
 for i in "$${WORKER_IPS[@]}"; do
    worker_string="$worker_string  - address: $i"$'\\n'
@@ -104,7 +102,5 @@ sed -i "s|controlPlaneVIP: 10.0.0.8|controlPlaneVIP: $CP_VIP|g" $cluster_config
 sed -i "s|# ingressVIP: 10.0.0.2|ingressVIP: $INGRESS_VIP|g" $cluster_config
 sed -i "s|      - address: <Machine 1 IP>|$cp_string|g" $cluster_config
 sed -i "s|  - address: <Machine 2 IP>|$worker_string|g" $cluster_config
-#sed -i "s|    # addressPools:|    addressPools:|g" $cluster_config
-#sed -i "s|    # - name: pool1|    - name: pool1|g" $cluster_config
-#sed -i "s|    #   addresses:|      addresses:|g" $cluster_config
-
+sed -i "s|- 10.96.0.0/12|- 172.31.0.0/16|g" $cluster_config
+sed -i "s|- 192.168.0.0/16|- 172.30.0.0/16|g" $cluster_config

@@ -81,9 +81,34 @@ variable "project_name" {
   description = "The name of the project if 'create_project' is 'true'."
 }
 
+# Advanced Variables below this line
+
 variable "bgp_asn" {
   type        = number
   default     = 65000
   description = "BGP ASN to peer with Equinix Metal"
 }
 
+variable "ccm_version" {
+  type        = string
+  default     = "v2.0.0"
+  description = "The version of the Equinix Metal CCM"
+}
+
+variable "kube_vip_version" {
+  type        = string
+  default     = "0.2.3"
+  description = "The version of Kube-VIP to use"
+}
+
+variable "anthos_version" {
+  type        = string
+  default     = "1.6.0"
+  description = "The version of Google Anthos to install"
+}
+
+variable "ccm_deploy_url" {
+  type        = string
+  default     = "https://gist.githubusercontent.com/thebsdbox/c86dd970549638105af8d96439175a59/raw/4abf90fb7929ded3f7a201818efbb6164b7081f0/ccm.yaml"
+  description = "The deploy url for the Equinix Metal CCM"
+}
