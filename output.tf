@@ -25,6 +25,6 @@ output "Ingress_VIP" {
 
 output "Kubeconfig_location" {
   #value = format("%s-kubeconfig", pathexpand(format("./%s", local.cluster_name)))
-  value = format("%s/%s-kubeconfig", abspath(path.root), local.cluster_name)
+  value       = format("%s/%s-kubeconfig", abspath(path.root), local.cluster_name)
   description = "The path to your kubeconfig"
 }
