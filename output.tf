@@ -17,7 +17,14 @@ output "Control_Plane_VIP" {
   value       = cidrhost(packet_reserved_ip_block.cp_vip.cidr_notation, 0)
   description = "The Virtual IP for the Control Plane"
 }
+
 output "Ingress_VIP" {
   value       = cidrhost(packet_reserved_ip_block.ingress_vip.cidr_notation, 0)
   description = "The Virtual IP for Ingress"
+}
+
+output "Kubeconfig_location" {
+  #value = format("%s-kubeconfig", pathexpand(format("./%s", local.cluster_name)))
+  value = format("%s/%s-kubeconfig", abspath(path.root), local.cluster_name)
+  description = "The path to your kubeconfig"
 }

@@ -123,8 +123,8 @@ data "template_file" "deploy_anthos_cluster" {
     operating_system = var.operating_system
     cp_vip           = cidrhost(packet_reserved_ip_block.cp_vip.cidr_notation, 0)
     ingress_vip      = cidrhost(packet_reserved_ip_block.ingress_vip.cidr_notation, 0)
-    cp_ips           = join(" ", packet_device.control_plane.*.access_public_ipv4)
-    worker_ips       = join(" ", packet_device.worker_nodes.*.access_public_ipv4)
+    cp_ips           = join(" ", packet_device.control_plane.*.access_private_ipv4)
+    worker_ips       = join(" ", packet_device.worker_nodes.*.access_private_ipv4)
     anthos_ver       = var.anthos_version
   }
 }
@@ -230,8 +230,8 @@ data "template_file" "add_remaining_cps" {
   template = file("templates/add_remaining_cps.sh")
   vars = {
     cluster_name = local.cluster_name
-    cp_2         = packet_device.control_plane.1.access_public_ipv4
-    cp_3         = packet_device.control_plane.2.access_public_ipv4
+    cp_2         = packet_device.control_plane.1.access_private_ipv4
+    cp_3         = packet_device.control_plane.2.access_private_ipv4
   }
 }
 

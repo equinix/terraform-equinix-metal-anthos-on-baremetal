@@ -8,8 +8,8 @@ mkdir -p /root/.kube/
 
 cp /root/baremetal/bmctl-workspace/$CLUSTER_NAME/$CLUSTER_NAME-kubeconfig /root/.kube/config
 # Wait a minute for things to settle
-echo "Waiting for 60 seconds to let the cluster settle"
-sleep 60
+#echo "Waiting for 60 seconds to let the cluster settle"
+#sleep 60
 kubectl \
     --kubeconfig /root/baremetal/bmctl-workspace/$CLUSTER_NAME/$CLUSTER_NAME-kubeconfig \
     -n cluster-$CLUSTER_NAME \

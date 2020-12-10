@@ -15,7 +15,8 @@ function ubuntu_pre_reqs {
     curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
     sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu focal stable" -y
     sudo apt update -y
-    sudo apt install docker-ce -y
+    DOCKER_VERSION=`sudo apt-cache madison docker-ce | grep '19.03.13' | awk '{print $3}'`
+    sudo apt install docker-ce=$DOCKER_VERSION -y
     sudo usermod -aG docker $USER
 
     # Install Google Cloud SDK
