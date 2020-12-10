@@ -46,7 +46,8 @@ gpgkey=https://packages.cloud.google.com/yum/doc/yum-key.gpg
     https://packages.cloud.google.com/yum/doc/rpm-package-key.gpg
 EOM
 
-    sudo dnf install docker-ce iptables google-cloud-sdk python3 -y
+    DOCKER_VERSION=`sudo dnf --showduplicates list docker-ce | grep '19.03.13' | awk '{print $2}'`
+    sudo dnf install docker-ce-$DOCKER_VERSION iptables google-cloud-sdk python3 -y
     sudo systemctl enable --now docker
 }
 
