@@ -194,7 +194,7 @@ You can see this output again at anytime by running `terraform output`
 
 ## Use an existing Equinix Metal project
 If you have an existing Equinix Metal project you can use it.
-** YOU MUST ENABLE BGP PEERING ON YOUR PROJECT WITHOUT A PASSWORD **
+**YOU MUST ENABLE BGP PEERING ON YOUR PROJECT WITHOUT A PASSWORD**
 
 Get your Project ID, navigate to the Project from the console.equinixmetal.com console and click on PROJECT SETTINGS, copy the PROJECT ID.
 
