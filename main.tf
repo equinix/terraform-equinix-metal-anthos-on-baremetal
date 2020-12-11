@@ -183,7 +183,7 @@ resource "null_resource" "deploy_anthos_cluster" {
     inline = [
       "cd /root/baremetal/",
       "export GOOGLE_APPLICATION_CREDENTIALS=/root/baremetal/keys/super-admin.json",
-      "/root/baremetal/bmctl create cluster -c ${local.cluster_name} --force"
+      "/root/baremetal/bmctl create cluster -c ${local.cluster_name} --force &> /root/baremetal/cluster_create.log"
     ]
   }
 }
