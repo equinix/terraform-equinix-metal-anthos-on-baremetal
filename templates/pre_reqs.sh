@@ -10,20 +10,21 @@ IFS=' ' read -r -a WORKER_IPS <<< '${worker_ips}'
 
 function ubuntu_pre_reqs {
     # Install Docker
-    sudo apt update -y
-    sudo apt install apt-transport-https ca-certificates curl software-properties-common gnupg -y
+    export DEBIAN_FRONTEND=noninteractive
+    sudo apt update -qy
+    sudo apt install apt-transport-https ca-certificates curl software-properties-common gnupg -qy
     curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
-    sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu focal stable" -y
-    sudo apt update -y
+    sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu focal stable" -qy
+    sudo apt update -qy
     DOCKER_VERSION=`sudo apt-cache madison docker-ce | grep '19.03.13' | awk '{print $3}'`
-    sudo apt install docker-ce=$DOCKER_VERSION -y
+    sudo apt install docker-ce=$DOCKER_VERSION -qy
     sudo usermod -aG docker $USER
 
     # Install Google Cloud SDK
     echo "deb [signed-by=/usr/share/keyrings/cloud.google.gpg] https://packages.cloud.google.com/apt cloud-sdk main" | sudo tee -a /etc/apt/sources.list.d/google-cloud-sdk.list
     curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo apt-key --keyring /usr/share/keyrings/cloud.google.gpg add -
-    sudo apt-get update -y 
-    sudo apt-get install google-cloud-sdk -y
+    sudo apt-get update -qy 
+    sudo apt-get install google-cloud-sdk -qy
 }
 
 
