@@ -112,3 +112,10 @@ variable "ccm_deploy_url" {
   default     = "https://gist.githubusercontent.com/thebsdbox/c86dd970549638105af8d96439175a59/raw/4abf90fb7929ded3f7a201818efbb6164b7081f0/ccm.yaml"
   description = "The deploy url for the Equinix Metal CCM"
 }
+
+variable "kube_vip_daemonset_url" {
+  type        = string
+  default     = "https://raw.githubusercontent.com/plunder-app/kube-vip/bb7d2da73eeb6c4712479b007ff931a12180e626/docs/manifests/kube-vip-em.yaml"
+  description = "The deploy url for the Kube-VIP Daemonset"
+}
+

@@ -4,6 +4,8 @@ export EIP='${eip}'
 KUBE_VIP_VER='${kube_vip_ver}'
 CLUSTER_NAME='${cluster_name}'
 COUNT='${count}'
+PACKET_API_KEY='${auth_token}'
+PACKET_PROJECT_ID='${project_id}'
 
 
 function wait_for_path() {
@@ -21,14 +23,13 @@ function wait_for_path() {
     echo "$1 FOUND!"
 }
 
-function gen_kube_vip () {
+function gen_kube_vip_old () {
     # Generate Kube-VIP manifest
     if [[ "$1" == "cp" ]]; then
         flags="--vip $EIP --controlplane "
     else
         flags="--inCluster --services "
     fi
-    mkdir -p /root/equinix-metal/
     sudo docker run --network host --rm plndr/kube-vip:$KUBE_VIP_VER manifest pod \
 	--interface lo \
 	$flags \
@@ -38,7 +39,22 @@ function gen_kube_vip () {
         --peerAddress $(curl https://metadata.platformequinix.com/metadata | jq -r '.bgp_neighbors[0].peer_ips[0]') \
         --localAS $(curl https://metadata.platformequinix.com/metadata | jq '.bgp_neighbors[0].customer_as') \
         --bgpRouterID $(curl https://metadata.platformequinix.com/metadata | jq -r '.bgp_neighbors[0].customer_ip') \
-        | sudo tee /root/equinix-metal/vip.yaml
+        | sudo tee /root/bootstrap/vip.yaml
+}
+
+function gen_kube_vip () {
+    sudo docker run --network host --rm plndr/kube-vip:$KUBE_VIP_VER manifest pod \
+	--interface lo \
+	--vip $EIP \
+	--port 6444 \
+        --controlplane \
+	--bgp \
+	--packet \
+	--packetKey $PACKET_API_KEY \
+	--packetProject "__REPLACE_ME__" \
+        | sudo tee /root/bootstrap/vip.yaml
+        PROJECT_NAME=$(curl -s https://api.equinix.com/metal/v1/projects/$PACKET_PROJECT_ID -H 'Accept: application/json' -H "X-Auth-Token: $PACKET_API_KEY" | jq -r '.name')
+	sed -i "s|__REPLACE_ME__|$PROJECT_NAME|g" /root/bootstrap/vip.yaml
 }
 
 function wait_for_docker () {
@@ -65,9 +81,9 @@ elif [[ "$COUNT" == "1" ]]; then
 else
     gen_kube_vip "worker"
 fi
-wait_for_path "/root/equinix-metal/vip.yaml"
+wait_for_path "/root/bootstrap/vip.yaml"
 # Copy kube-vip manifest to the manifests folder
-cp /root/equinix-metal/vip.yaml /etc/kubernetes/manifests/
+cp /root/bootstrap/vip.yaml /etc/kubernetes/manifests/
 
 sed -i '/KUBELET_KUBEADM_ARGS/ s/"$/ --cloud-provider=external"/' /var/lib/kubelet/kubeadm-flags.env
 sudo systemctl restart kubelet

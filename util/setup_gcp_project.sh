@@ -1,6 +1,13 @@
 #!/bin/bash
 
 
+if ! command -v gcloud &> /dev/null
+then
+    echo "The Google Cloud SDK is not installed."
+    echo "Pleaase visit https://cloud.google.com/sdk/docs/install for instructions on how to install."
+    exit 1
+fi
+
 #start the interactive portion to capture user details
 echo "This script will help you perform the steps outlined at
 https://cloud.google.com/gke-on-prem/docs/how-to/service-accounts

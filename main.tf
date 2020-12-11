@@ -57,6 +57,13 @@ resource "packet_reserved_ip_block" "ingress_vip" {
   description = format("Cluster: '%s' Ingress VIP", local.cluster_name)
 }
 
+data "template_file" "user_data" {
+  template = file("templates/user_data.sh")
+  vars = {
+    operating_system = var.operating_system
+  }
+}
+
 resource "packet_device" "control_plane" {
   depends_on = [
     packet_ssh_key.ssh_pub_key
@@ -68,7 +75,7 @@ resource "packet_device" "control_plane" {
   operating_system = var.operating_system
   billing_cycle    = var.billing_cycle
   project_id       = local.project_id
-  user_data        = file("templates/user_data.sh")
+  user_data        = data.template_file.user_data.rendered
   tags             = ["anthos", "baremetal", "control-plane"]
 }
 
@@ -83,7 +90,7 @@ resource "packet_device" "worker_nodes" {
   operating_system = var.operating_system
   billing_cycle    = var.billing_cycle
   project_id       = local.project_id
-  user_data        = file("templates/user_data.sh")
+  user_data        = data.template_file.user_data.rendered
   tags             = ["anthos", "baremetal", "worker"]
 }
 
@@ -138,7 +145,10 @@ resource "null_resource" "prep_anthos_cluster" {
   }
 
   provisioner "remote-exec" {
-    inline = ["mkdir -p /root/baremetal/keys/"]
+    inline = [
+      "mkdir -p /root/baremetal/keys/",
+      "mkdir -p /root/bootstrap/"
+    ]
   }
 
   provisioner "file" {
@@ -148,11 +158,11 @@ resource "null_resource" "prep_anthos_cluster" {
 
   provisioner "file" {
     content     = data.template_file.deploy_anthos_cluster.rendered
-    destination = "/root/baremetal/pre_reqs.sh"
+    destination = "/root/bootstrap/pre_reqs.sh"
   }
 
   provisioner "remote-exec" {
-    inline = ["bash /root/baremetal/pre_reqs.sh"]
+    inline = ["bash /root/bootstrap/pre_reqs.sh"]
   }
 }
 
@@ -186,19 +196,10 @@ data "template_file" "template_kube_vip_install" {
     eip          = cidrhost(packet_reserved_ip_block.cp_vip.cidr_notation, 0)
     count        = count.index
     kube_vip_ver = var.kube_vip_version
+    auth_token   = var.auth_token
+    project_id   = local.project_id
   }
 }
-
-data "template_file" "template_kube_vip_install_workers" {
-  template = file("templates/kube_vip_install.sh")
-  vars = {
-    cluster_name = local.cluster_name
-    eip          = cidrhost(packet_reserved_ip_block.cp_vip.cidr_notation, 0)
-    count        = 3
-    kube_vip_ver = var.kube_vip_version
-  }
-}
-
 
 resource "null_resource" "kube_vip_install_first_cp" {
   depends_on = [
@@ -215,11 +216,11 @@ resource "null_resource" "kube_vip_install_first_cp" {
   }
   provisioner "file" {
     content     = data.template_file.template_kube_vip_install.0.rendered
-    destination = "/root/baremetal/kube_vip_install.sh"
+    destination = "/root/bootstrap/kube_vip_install.sh"
   }
   provisioner "remote-exec" {
     inline = [
-      "bash /root/baremetal/kube_vip_install.sh"
+      "bash /root/bootstrap/kube_vip_install.sh"
     ]
   }
 }
@@ -249,11 +250,11 @@ resource "null_resource" "add_remaining_cps" {
   }
   provisioner "file" {
     content     = data.template_file.add_remaining_cps.0.rendered
-    destination = "/root/baremetal/add_remaining_cps.sh"
+    destination = "/root/bootstrap/add_remaining_cps.sh"
   }
   provisioner "remote-exec" {
     inline = [
-      "bash /root/baremetal/add_remaining_cps.sh"
+      "bash /root/bootstrap/add_remaining_cps.sh"
     ]
   }
 }
@@ -270,40 +271,15 @@ resource "null_resource" "kube_vip_install_remaining_cp" {
     host        = element(packet_device.control_plane.*.access_public_ipv4, count.index + 1)
   }
   provisioner "remote-exec" {
-    inline = ["mkdir -p /root/baremetal"]
+    inline = ["mkdir -p /root/bootstrap"]
   }
   provisioner "file" {
     content     = data.template_file.template_kube_vip_install.1.rendered
-    destination = "/root/baremetal/kube_vip_install.sh"
+    destination = "/root/bootstrap/kube_vip_install.sh"
   }
   provisioner "remote-exec" {
     inline = [
-      "bash /root/baremetal/kube_vip_install.sh"
-    ]
-  }
-}
-
-resource "null_resource" "kube_vip_install_workers" {
-  count = var.worker_count
-  depends_on = [
-    null_resource.kube_vip_install_remaining_cp
-  ]
-  connection {
-    type        = "ssh"
-    user        = "root"
-    private_key = chomp(tls_private_key.ssh_key_pair.private_key_pem)
-    host        = element(packet_device.worker_nodes.*.access_public_ipv4, count.index)
-  }
-  provisioner "remote-exec" {
-    inline = ["mkdir -p /root/baremetal"]
-  }
-  provisioner "file" {
-    content     = data.template_file.template_kube_vip_install_workers.rendered
-    destination = "/root/baremetal/kube_vip_install.sh"
-  }
-  provisioner "remote-exec" {
-    inline = [
-      "bash /root/baremetal/kube_vip_install.sh"
+      "bash /root/bootstrap/kube_vip_install.sh"
     ]
   }
 }
@@ -318,7 +294,7 @@ data "template_file" "ccm_secret" {
 
 resource "null_resource" "install_ccm" {
   depends_on = [
-    null_resource.kube_vip_install_workers
+    null_resource.kube_vip_install_remaining_cp
   ]
   connection {
     type        = "ssh"
@@ -328,12 +304,29 @@ resource "null_resource" "install_ccm" {
   }
   provisioner "file" {
     content     = data.template_file.ccm_secret.rendered
-    destination = "/root/baremetal/ccm_secret.yaml"
+    destination = "/root/bootstrap/ccm_secret.yaml"
   }
   provisioner "remote-exec" {
     inline = [
-      "kubectl --kubeconfig /root/baremetal/bmctl-workspace/${local.cluster_name}/${local.cluster_name}-kubeconfig apply -f /root/baremetal/ccm_secret.yaml",
+      "kubectl --kubeconfig /root/baremetal/bmctl-workspace/${local.cluster_name}/${local.cluster_name}-kubeconfig apply -f /root/bootstrap/ccm_secret.yaml",
       "kubectl --kubeconfig /root/baremetal/bmctl-workspace/${local.cluster_name}/${local.cluster_name}-kubeconfig apply -f ${var.ccm_deploy_url}"
+    ]
+  }
+}
+
+resource "null_resource" "install_kube_vip_daemonset" {
+  depends_on = [
+    null_resource.install_ccm
+  ]
+  connection {
+    type        = "ssh"
+    user        = "root"
+    private_key = chomp(tls_private_key.ssh_key_pair.private_key_pem)
+    host        = packet_device.control_plane.0.access_public_ipv4
+  }
+  provisioner "remote-exec" {
+    inline = [
+      "kubectl --kubeconfig /root/baremetal/bmctl-workspace/${local.cluster_name}/${local.cluster_name}-kubeconfig apply -f ${var.kube_vip_daemonset_url}"
     ]
   }
 }

@@ -43,9 +43,9 @@ enabled=1
 gpgcheck=1
 repo_gpgcheck=1
 gpgkey=https://packages.cloud.google.com/yum/doc/yum-key.gpg
-    https://packages.cloud.google.com/yum/doc/rpm-package-key.gpg
+       https://packages.cloud.google.com/yum/doc/rpm-package-key.gpg
 EOM
-
+    sudo yum -q makecache -y --disablerepo='*' --enablerepo=google-cloud-sdk
     DOCKER_VERSION=`sudo dnf --showduplicates list docker-ce | grep '19.03.13' | awk '{print $2}'`
     sudo dnf install docker-ce-$DOCKER_VERSION iptables google-cloud-sdk python3 -y
     sudo systemctl enable --now docker
