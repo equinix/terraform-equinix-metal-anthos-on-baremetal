@@ -294,7 +294,7 @@ data "template_file" "ccm_secret" {
 
 resource "null_resource" "install_ccm" {
   depends_on = [
-    null_resource.kube_vip_install_remaining_cp
+    null_resource.kube_vip_install_remaining_cp,
     null_resource.deploy_anthos_cluster,
     null_resource.kube_vip_install_first_cp
   ]
