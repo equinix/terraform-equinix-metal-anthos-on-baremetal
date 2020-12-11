@@ -59,7 +59,7 @@ function gen_kube_vip () {
 
 function wait_for_docker () {
 
-    while [ ! docker ps ]; do
+    while ! docker ps &> /dev/null; do
         echo "Docker not installed yet... Sleeping 10Sec!"
         sleep 10
     done
