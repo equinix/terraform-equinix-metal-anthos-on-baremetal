@@ -166,6 +166,13 @@ resource "null_resource" "prep_anthos_cluster" {
   }
 }
 
+data "template_file" "create_cluster" {
+  template = file("templates/create_cluster.sh")
+  vars = {
+    cluster_name = local.cluster_name
+  }
+}
+
 resource "null_resource" "deploy_anthos_cluster" {
   depends_on = [
     packet_bgp_session.enable_cp_bgp,
@@ -179,11 +186,15 @@ resource "null_resource" "deploy_anthos_cluster" {
     private_key = chomp(tls_private_key.ssh_key_pair.private_key_pem)
     host        = packet_device.control_plane.0.access_public_ipv4
   }
+
+  provisioner "file" {
+    content     = data.template_file.create_cluster.rendered
+    destination = "/root/bootstrap/create_cluster.sh"
+  }
+
   provisioner "remote-exec" {
     inline = [
-      "cd /root/baremetal/",
-      "export GOOGLE_APPLICATION_CREDENTIALS=/root/baremetal/keys/super-admin.json",
-      "/root/baremetal/bmctl create cluster -c ${local.cluster_name} --force &> /root/baremetal/cluster_create.log"
+      "bash /root/bootstrap/create_cluster.sh"
     ]
   }
 }
@@ -316,6 +327,10 @@ resource "null_resource" "install_ccm" {
   }
 }
 
+data "template_file" "kube_vip_ds" {
+  template = file("templates/kube_vip_ds.yaml")
+}
+
 resource "null_resource" "install_kube_vip_daemonset" {
   depends_on = [
     null_resource.install_ccm
@@ -326,9 +341,13 @@ resource "null_resource" "install_kube_vip_daemonset" {
     private_key = chomp(tls_private_key.ssh_key_pair.private_key_pem)
     host        = packet_device.control_plane.0.access_public_ipv4
   }
+  provisioner "file" {
+    content     = data.template_file.kube_vip_ds.rendered
+    destination = "/root/bootstrap/kube_vip_ds.yaml"
+  }
   provisioner "remote-exec" {
     inline = [
-      "kubectl --kubeconfig /root/baremetal/bmctl-workspace/${local.cluster_name}/${local.cluster_name}-kubeconfig apply -f ${var.kube_vip_daemonset_url}"
+      "kubectl --kubeconfig /root/baremetal/bmctl-workspace/${local.cluster_name}/${local.cluster_name}-kubeconfig apply -f /root/bootstrap/kube_vip_ds.yaml"
     ]
   }
 }
