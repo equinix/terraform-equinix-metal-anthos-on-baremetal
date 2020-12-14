@@ -6,21 +6,23 @@ CLUSTER_NAME='${cluster_name}'
 COUNT='${count}'
 PACKET_API_KEY='${auth_token}'
 PACKET_PROJECT_ID='${project_id}'
-
+GREEN='\033[0;32m' # Color green
+YELLOW='\033[0;33m' # Color green
+NC='\033[0m' # No Color
 
 function wait_for_path() {
     if [[ $2 == 'dir' ]]; then
         while [ ! -d $1 ]; do
-	    echo "Waiting for '$1' to be created..."
+	    printf "$${YELLOW}Waiting for '$1' to be created...$${NC}\n"
 	    sleep 10
 	done
     else
         while [ ! -f $1 ]; do
-	    echo "Waiting for '$1' to be created..."
+	    printf "$${YELLOW}Waiting for '$1' to be created...$${NC}\n"
             sleep 10
         done
     fi
-    echo "$1 FOUND!"
+    printf "$${GREEN}$1 FOUND!$${NC}\n"
 }
 
 function gen_kube_vip () {
@@ -41,10 +43,10 @@ function gen_kube_vip () {
 function wait_for_docker () {
 
     while ! docker ps &> /dev/null; do
-        echo "Docker not installed yet... Sleeping 10Sec!"
+        printf "$${YELLOW}Docker not installed yet... Sleeping 10Sec!$${NC}\n"
         sleep 10
     done
-    echo "Docker installed!"
+    printf "$${GREEN}Docker installed!$${NC}\n"
 }
 
 wait_for_docker
@@ -56,7 +58,7 @@ if [[ "$COUNT" == "0" ]]; then
     gen_kube_vip
 elif [[ "$COUNT" == "1" ]]; then
     wait_for_path "/etc/kubernetes/admin.conf"
-    echo "Wait a full minute before adding Kube-VIP or the cluster join will not complete..."
+    printf "$${YELLOW}Wait a full minute before adding Kube-VIP or the cluster join will not complete...$${NC}\n"
     sleep 60
     gen_kube_vip
 fi
@@ -66,4 +68,8 @@ cp /root/bootstrap/vip.yaml /etc/kubernetes/manifests/
 
 sed -i '/KUBELET_KUBEADM_ARGS/ s/"$/ --cloud-provider=external"/' /var/lib/kubelet/kubeadm-flags.env
 sudo systemctl restart kubelet
+
+if [[ "$COUNT" == "0" ]]; then
+    printf "$${GREEN}BGP peering initiated! Cluster should be completed in about 5 minutes.$${NC}\n"
+fi
 
