@@ -1,5 +1,6 @@
 # Local .terraform directories
 **/.terraform/*
+.terraform*
 
 # .tfstate files
 *.tfstate
@@ -29,3 +30,5 @@ override.tf.json
 # example: *tfplan*
 terraform.tfvars
 util/keys
+
+*-kubeconfig

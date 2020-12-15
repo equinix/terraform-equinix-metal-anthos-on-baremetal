@@ -2,11 +2,20 @@ provider "packet" {
   auth_token = var.auth_token
 }
 
-
 resource "random_string" "cluster_suffix" {
   length  = 5
   special = false
   upper   = false
+}
+
+resource "packet_project" "new_project" {
+  count           = var.create_project ? 1 : 0
+  name            = var.project_name
+  organization_id = var.organization_id
+  bgp_config {
+    deployment_type = "local"
+    asn             = var.bgp_asn
+  }
 }
 
 locals {
@@ -15,12 +24,7 @@ locals {
   timestamp           = timestamp()
   timestamp_sanitized = replace(local.timestamp, "/[- TZ:]/", "")
   ssh_key_name        = format("bm-cluster-%s", local.timestamp_sanitized)
-}
-
-resource "packet_vlan" "private_vlan" {
-  facility    = var.facility
-  project_id  = var.project_id
-  description = "Private Network"
+  project_id          = var.create_project ? packet_project.new_project[0].id : var.project_id
 }
 
 resource "tls_private_key" "ssh_key_pair" {
@@ -39,23 +43,24 @@ resource "local_file" "cluster_private_key_pem" {
   file_permission = "0600"
 }
 
-data "template_file" "control_plane_user_data" {
-  count    = local.cp_count
-  template = file("templates/user_data.sh")
-  vars = {
-    operating_system = var.operating_system
-    ip_address       = cidrhost(var.private_subnet, count.index + 1)
-    netmask          = cidrnetmask(var.private_subnet)
-  }
+resource "packet_reserved_ip_block" "cp_vip" {
+  project_id  = local.project_id
+  facility    = var.facility
+  quantity    = 1
+  description = format("Cluster: '%s' Contol Plane VIP", local.cluster_name)
 }
 
-data "template_file" "worker_user_data" {
-  count    = var.worker_count
+resource "packet_reserved_ip_block" "ingress_vip" {
+  project_id  = local.project_id
+  facility    = var.facility
+  quantity    = 1
+  description = format("Cluster: '%s' Ingress VIP", local.cluster_name)
+}
+
+data "template_file" "user_data" {
   template = file("templates/user_data.sh")
   vars = {
     operating_system = var.operating_system
-    ip_address       = cidrhost(var.private_subnet, local.cp_count + count.index + 1)
-    netmask          = cidrnetmask(var.private_subnet)
   }
 }
 
@@ -69,9 +74,9 @@ resource "packet_device" "control_plane" {
   facilities       = [var.facility]
   operating_system = var.operating_system
   billing_cycle    = var.billing_cycle
-  project_id       = var.project_id
-  tags             = ["anthos", "baremetal", cidrhost(var.private_subnet, count.index + 1)]
-  user_data        = element(data.template_file.control_plane_user_data.*.rendered, count.index)
+  project_id       = local.project_id
+  user_data        = data.template_file.user_data.rendered
+  tags             = ["anthos", "baremetal", "control-plane"]
 }
 
 resource "packet_device" "worker_nodes" {
@@ -84,35 +89,21 @@ resource "packet_device" "worker_nodes" {
   facilities       = [var.facility]
   operating_system = var.operating_system
   billing_cycle    = var.billing_cycle
-  project_id       = var.project_id
-  tags             = ["anthos", "baremetal", cidrhost(var.private_subnet, local.cp_count + count.index + 1)]
-  user_data        = element(data.template_file.worker_user_data.*.rendered, count.index)
+  project_id       = local.project_id
+  user_data        = data.template_file.user_data.rendered
+  tags             = ["anthos", "baremetal", "worker"]
 }
 
-resource "packet_device_network_type" "control_plane" {
-  count     = local.cp_count
-  device_id = element(packet_device.control_plane.*.id, count.index)
-  type      = "hybrid"
+resource "packet_bgp_session" "enable_cp_bgp" {
+  count          = local.cp_count
+  device_id      = element(packet_device.control_plane.*.id, count.index)
+  address_family = "ipv4"
 }
 
-resource "packet_device_network_type" "worker_nodes" {
-  count     = var.worker_count
-  device_id = element(packet_device.worker_nodes.*.id, count.index)
-  type      = "hybrid"
-}
-
-resource "packet_port_vlan_attachment" "control_plane_vlan_attach" {
-  count     = local.cp_count
-  device_id = element(packet_device_network_type.control_plane.*.id, count.index)
-  port_name = "eth1"
-  vlan_vnid = packet_vlan.private_vlan.vxlan
-}
-
-resource "packet_port_vlan_attachment" "worker_vlan_attach" {
-  count     = var.worker_count
-  device_id = element(packet_device_network_type.worker_nodes.*.id, count.index)
-  port_name = "eth1"
-  vlan_vnid = packet_vlan.private_vlan.vxlan
+resource "packet_bgp_session" "enable_worker_bgp" {
+  count          = var.worker_count
+  device_id      = element(packet_device.worker_nodes.*.id, count.index)
+  address_family = "ipv4"
 }
 
 resource "null_resource" "write_ssh_private_key" {
@@ -137,16 +128,11 @@ data "template_file" "deploy_anthos_cluster" {
   vars = {
     cluster_name     = local.cluster_name
     operating_system = var.operating_system
-  }
-}
-
-data "template_file" "update_cluster_vars" {
-  template = file("templates/update_cluster_vars.py")
-  vars = {
-    private_subnet = var.private_subnet
-    cp_count       = local.cp_count
-    worker_count   = var.worker_count
-    cluster_name   = local.cluster_name
+    cp_vip           = cidrhost(packet_reserved_ip_block.cp_vip.cidr_notation, 0)
+    ingress_vip      = cidrhost(packet_reserved_ip_block.ingress_vip.cidr_notation, 0)
+    cp_ips           = join(" ", packet_device.control_plane.*.access_private_ipv4)
+    worker_ips       = join(" ", packet_device.worker_nodes.*.access_private_ipv4)
+    anthos_ver       = var.anthos_version
   }
 }
 
@@ -159,7 +145,10 @@ resource "null_resource" "prep_anthos_cluster" {
   }
 
   provisioner "remote-exec" {
-    inline = ["mkdir -p /root/baremetal/keys/"]
+    inline = [
+      "mkdir -p /root/baremetal/keys/",
+      "mkdir -p /root/bootstrap/"
+    ]
   }
 
   provisioner "file" {
@@ -169,24 +158,25 @@ resource "null_resource" "prep_anthos_cluster" {
 
   provisioner "file" {
     content     = data.template_file.deploy_anthos_cluster.rendered
-    destination = "/root/baremetal/pre_reqs.sh"
-  }
-
-  provisioner "file" {
-    content     = data.template_file.update_cluster_vars.rendered
-    destination = "/root/baremetal/update_cluster_vars.py"
+    destination = "/root/bootstrap/pre_reqs.sh"
   }
 
   provisioner "remote-exec" {
-    inline = ["bash /root/baremetal/pre_reqs.sh"]
+    inline = ["bash /root/bootstrap/pre_reqs.sh"]
+  }
+}
+
+data "template_file" "create_cluster" {
+  template = file("templates/create_cluster.sh")
+  vars = {
+    cluster_name = local.cluster_name
   }
 }
 
 resource "null_resource" "deploy_anthos_cluster" {
   depends_on = [
-    packet_port_vlan_attachment.control_plane_vlan_attach,
-    packet_port_vlan_attachment.worker_vlan_attach,
-    null_resource.prep_anthos_cluster
+    null_resource.prep_anthos_cluster,
+    null_resource.write_ssh_private_key
   ]
   connection {
     type        = "ssh"
@@ -194,12 +184,207 @@ resource "null_resource" "deploy_anthos_cluster" {
     private_key = chomp(tls_private_key.ssh_key_pair.private_key_pem)
     host        = packet_device.control_plane.0.access_public_ipv4
   }
+
+  provisioner "file" {
+    content     = data.template_file.create_cluster.rendered
+    destination = "/root/bootstrap/create_cluster.sh"
+  }
+
   provisioner "remote-exec" {
     inline = [
-      "python3 /root/baremetal/update_cluster_vars.py",
-      "cd /root/baremetal/",
-      "export GOOGLE_APPLICATION_CREDENTIALS=/root/baremetal/keys/super-admin.json",
-      "/root/baremetal/bmctl create cluster -c ${local.cluster_name} --force"
+      "bash /root/bootstrap/create_cluster.sh"
     ]
   }
 }
+
+resource "null_resource" "download_kube_config" {
+  depends_on = [null_resource.deploy_anthos_cluster]
+
+  provisioner "local-exec" {
+    command = "scp -i ~/.ssh/${local.ssh_key_name} -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null  root@${packet_device.control_plane.0.access_public_ipv4}:/root/baremetal/bmctl-workspace/${local.cluster_name}/${local.cluster_name}-kubeconfig ."
+  }
+}
+
+data "template_file" "template_kube_vip_install" {
+  count    = var.ha_control_plane ? 2 : 1
+  template = file("templates/kube_vip_install.sh")
+  vars = {
+    cluster_name = local.cluster_name
+    eip          = cidrhost(packet_reserved_ip_block.cp_vip.cidr_notation, 0)
+    count        = count.index
+    kube_vip_ver = var.kube_vip_version
+    auth_token   = var.auth_token
+    project_id   = local.project_id
+  }
+}
+
+resource "null_resource" "kube_vip_install_first_cp" {
+  depends_on = [
+    packet_bgp_session.enable_cp_bgp,
+    packet_bgp_session.enable_worker_bgp,
+    null_resource.prep_anthos_cluster,
+  ]
+  connection {
+    type        = "ssh"
+    user        = "root"
+    private_key = chomp(tls_private_key.ssh_key_pair.private_key_pem)
+    host        = packet_device.control_plane.0.access_public_ipv4
+  }
+  provisioner "file" {
+    content     = data.template_file.template_kube_vip_install.0.rendered
+    destination = "/root/bootstrap/kube_vip_install.sh"
+  }
+  provisioner "remote-exec" {
+    inline = [
+      "bash /root/bootstrap/kube_vip_install.sh"
+    ]
+  }
+}
+
+
+data "template_file" "add_remaining_cps" {
+  count    = var.ha_control_plane ? 1 : 0
+  template = file("templates/add_remaining_cps.sh")
+  vars = {
+    cluster_name = local.cluster_name
+    cp_2         = packet_device.control_plane.1.access_private_ipv4
+    cp_3         = packet_device.control_plane.2.access_private_ipv4
+  }
+}
+
+resource "null_resource" "add_remaining_cps" {
+  count = var.ha_control_plane ? 1 : 0
+  depends_on = [
+    null_resource.deploy_anthos_cluster,
+    null_resource.kube_vip_install_first_cp
+  ]
+  connection {
+    type        = "ssh"
+    user        = "root"
+    private_key = chomp(tls_private_key.ssh_key_pair.private_key_pem)
+    host        = packet_device.control_plane.0.access_public_ipv4
+  }
+  provisioner "file" {
+    content     = data.template_file.add_remaining_cps.0.rendered
+    destination = "/root/bootstrap/add_remaining_cps.sh"
+  }
+  provisioner "remote-exec" {
+    inline = [
+      "bash /root/bootstrap/add_remaining_cps.sh"
+    ]
+  }
+}
+
+resource "null_resource" "kube_vip_install_remaining_cp" {
+  count = var.ha_control_plane ? 2 : 0
+  depends_on = [
+    null_resource.add_remaining_cps
+  ]
+  connection {
+    type        = "ssh"
+    user        = "root"
+    private_key = chomp(tls_private_key.ssh_key_pair.private_key_pem)
+    host        = element(packet_device.control_plane.*.access_public_ipv4, count.index + 1)
+  }
+  provisioner "remote-exec" {
+    inline = ["mkdir -p /root/bootstrap"]
+  }
+  provisioner "file" {
+    content     = data.template_file.template_kube_vip_install.1.rendered
+    destination = "/root/bootstrap/kube_vip_install.sh"
+  }
+  provisioner "remote-exec" {
+    inline = [
+      "bash /root/bootstrap/kube_vip_install.sh"
+    ]
+  }
+}
+
+data "template_file" "worker_kubelet_flags" {
+  template = file("templates/worker_kubelet_flags.sh")
+}
+
+resource "null_resource" "add_kubelet_flags_to_workers" {
+  count = var.worker_count
+  depends_on = [
+    null_resource.kube_vip_install_remaining_cp,
+    null_resource.deploy_anthos_cluster,
+    null_resource.kube_vip_install_first_cp
+  ]
+  connection {
+    type        = "ssh"
+    user        = "root"
+    private_key = chomp(tls_private_key.ssh_key_pair.private_key_pem)
+    host        = element(packet_device.worker_nodes.*.access_public_ipv4, count.index)
+  }
+  provisioner "remote-exec" {
+    inline = [
+      "mkdir -p /root/bootstrap/"
+    ]
+  }
+  provisioner "file" {
+    content     = data.template_file.worker_kubelet_flags.rendered
+    destination = "/root/bootstrap/worker_kubelet_flags.sh"
+  }
+  provisioner "remote-exec" {
+    inline = [
+      "bash /root/bootstrap/worker_kubelet_flags.sh"
+    ]
+  }
+}
+
+data "template_file" "ccm_secret" {
+  template = file("templates/ccm_secret.yaml")
+  vars = {
+    auth_token = var.auth_token
+    project_id = local.project_id
+  }
+}
+
+resource "null_resource" "install_ccm" {
+  depends_on = [
+    null_resource.add_kubelet_flags_to_workers
+  ]
+  connection {
+    type        = "ssh"
+    user        = "root"
+    private_key = chomp(tls_private_key.ssh_key_pair.private_key_pem)
+    host        = packet_device.control_plane.0.access_public_ipv4
+  }
+  provisioner "file" {
+    content     = data.template_file.ccm_secret.rendered
+    destination = "/root/bootstrap/ccm_secret.yaml"
+  }
+  provisioner "remote-exec" {
+    inline = [
+      "kubectl --kubeconfig /root/baremetal/bmctl-workspace/${local.cluster_name}/${local.cluster_name}-kubeconfig apply -f /root/bootstrap/ccm_secret.yaml",
+      "kubectl --kubeconfig /root/baremetal/bmctl-workspace/${local.cluster_name}/${local.cluster_name}-kubeconfig apply -f ${var.ccm_deploy_url}"
+    ]
+  }
+}
+
+data "template_file" "kube_vip_ds" {
+  template = file("templates/kube_vip_ds.yaml")
+}
+
+resource "null_resource" "install_kube_vip_daemonset" {
+  depends_on = [
+    null_resource.install_ccm
+  ]
+  connection {
+    type        = "ssh"
+    user        = "root"
+    private_key = chomp(tls_private_key.ssh_key_pair.private_key_pem)
+    host        = packet_device.control_plane.0.access_public_ipv4
+  }
+  provisioner "file" {
+    content     = data.template_file.kube_vip_ds.rendered
+    destination = "/root/bootstrap/kube_vip_ds.yaml"
+  }
+  provisioner "remote-exec" {
+    inline = [
+      "kubectl --kubeconfig /root/baremetal/bmctl-workspace/${local.cluster_name}/${local.cluster_name}-kubeconfig apply -f /root/bootstrap/kube_vip_ds.yaml"
+    ]
+  }
+}
+

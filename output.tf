@@ -1,13 +1,3 @@
-output "Control_Plane_Hostnames" {
-  value       = packet_device.control_plane.*.hostname
-  description = "Control Plane Hostnames"
-}
-
-output "Worker_Node_Hostnames" {
-  value       = packet_device.worker_nodes.*.hostname
-  description = "Worker Node hostnames"
-}
-
 output "Control_Plane_Public_IPs" {
   value       = packet_device.control_plane.*.access_public_ipv4
   description = "Control Plane Public IPs"
@@ -18,18 +8,27 @@ output "Worker_Public_IPs" {
   description = "Worker Node Public IPs"
 }
 
-output "Control_Plane_Tags" {
-  value       = packet_device.control_plane.*.tags
-  description = "Control Plane Tags"
-}
-
-output "Worker_Node_Tags" {
-  value       = packet_device.worker_nodes.*.tags
-  description = "Worker Node Tags"
-}
-
 output "ssh_key_location" {
   value       = local_file.cluster_private_key_pem.filename
   description = "The SSH Private Key File Location"
 }
 
+output "Control_Plane_VIP" {
+  value       = cidrhost(packet_reserved_ip_block.cp_vip.cidr_notation, 0)
+  description = "The Virtual IP for the Control Plane"
+}
+
+output "Ingress_VIP" {
+  value       = cidrhost(packet_reserved_ip_block.ingress_vip.cidr_notation, 0)
+  description = "The Virtual IP for Ingress"
+}
+
+output "Kubeconfig_location" {
+  value       = format("%s/%s-kubeconfig", abspath(path.root), local.cluster_name)
+  description = "The path to your kubeconfig"
+}
+
+output "Equinix_Metal_Project_ID" {
+  value       = local.project_id
+  description = "The project ID used for this deployment"
+}

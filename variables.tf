@@ -5,7 +5,14 @@ variable "auth_token" {
 
 variable "project_id" {
   type        = string
+  default     = "null"
   description = "Equinix Metal Project ID"
+}
+
+variable "organization_id" {
+  type        = string
+  default     = "null"
+  description = "Equinix Metal Organization ID"
 }
 
 variable "hostname" {
@@ -34,36 +41,81 @@ variable "worker_plan" {
 
 variable "ha_control_plane" {
   type        = bool
-  description = "Do you want a highly available control plane"
   default     = true
+  description = "Do you want a highly available control plane"
 }
 
 variable "worker_count" {
   type        = number
-  description = "Number of baremetal worker nodes"
   default     = 3
+  description = "Number of baremetal worker nodes"
 }
 
 variable "operating_system" {
   type        = string
-  description = "The Operating system of the node"
   default     = "ubuntu_20_04"
+  description = "The Operating system of the node"
 }
 
 variable "billing_cycle" {
   type        = string
-  description = "How the node will be billed (Not usually changed)"
   default     = "hourly"
-}
-
-variable "private_subnet" {
-  type        = string
-  description = "Private IP Space to use for Layer2"
-  default     = "172.29.254.0/24"
+  description = "How the node will be billed (Not usually changed)"
 }
 
 variable "cluster_name" {
   type        = string
-  description = "The GKE cluster name"
   default     = "equinix-metal-gke-cluster"
+  description = "The GKE cluster name"
 }
+
+variable "create_project" {
+  type        = bool
+  default     = true
+  description = "Create a Project if this is 'true'. Else use provided 'project_id'"
+}
+
+variable "project_name" {
+  type        = string
+  default     = "baremetal-anthos"
+  description = "The name of the project if 'create_project' is 'true'."
+}
+
+# Advanced Variables below this line
+
+variable "bgp_asn" {
+  type        = number
+  default     = 65000
+  description = "BGP ASN to peer with Equinix Metal"
+}
+
+variable "ccm_version" {
+  type        = string
+  default     = "v2.0.0"
+  description = "The version of the Equinix Metal CCM"
+}
+
+variable "kube_vip_version" {
+  type        = string
+  default     = "0.2.3"
+  description = "The version of Kube-VIP to use"
+}
+
+variable "anthos_version" {
+  type        = string
+  default     = "1.6.0"
+  description = "The version of Google Anthos to install"
+}
+
+variable "ccm_deploy_url" {
+  type        = string
+  default     = "https://gist.githubusercontent.com/thebsdbox/c86dd970549638105af8d96439175a59/raw/4abf90fb7929ded3f7a201818efbb6164b7081f0/ccm.yaml"
+  description = "The deploy url for the Equinix Metal CCM"
+}
+
+variable "kube_vip_daemonset_url" {
+  type        = string
+  default     = "https://raw.githubusercontent.com/plunder-app/kube-vip/bb7d2da73eeb6c4712479b007ff931a12180e626/docs/manifests/kube-vip-em.yaml"
+  description = "The deploy url for the Kube-VIP Daemonset"
+}
+
