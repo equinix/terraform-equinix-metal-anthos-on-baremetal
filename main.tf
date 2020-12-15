@@ -175,8 +175,6 @@ data "template_file" "create_cluster" {
 
 resource "null_resource" "deploy_anthos_cluster" {
   depends_on = [
-    packet_bgp_session.enable_cp_bgp,
-    packet_bgp_session.enable_worker_bgp,
     null_resource.prep_anthos_cluster,
     null_resource.write_ssh_private_key
   ]
@@ -199,6 +197,14 @@ resource "null_resource" "deploy_anthos_cluster" {
   }
 }
 
+resource "null_resource" "download_kube_config" {
+  depends_on = [null_resource.deploy_anthos_cluster]
+
+  provisioner "local-exec" {
+    command = "scp -i ~/.ssh/${local.ssh_key_name} -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null  root@${packet_device.control_plane.0.access_public_ipv4}:/root/baremetal/bmctl-workspace/${local.cluster_name}/${local.cluster_name}-kubeconfig ."
+  }
+}
+
 data "template_file" "template_kube_vip_install" {
   count    = var.ha_control_plane ? 2 : 1
   template = file("templates/kube_vip_install.sh")
@@ -217,7 +223,6 @@ resource "null_resource" "kube_vip_install_first_cp" {
     packet_bgp_session.enable_cp_bgp,
     packet_bgp_session.enable_worker_bgp,
     null_resource.prep_anthos_cluster,
-    null_resource.write_ssh_private_key
   ]
   connection {
     type        = "ssh"
@@ -295,6 +300,39 @@ resource "null_resource" "kube_vip_install_remaining_cp" {
   }
 }
 
+data "template_file" "worker_kubelet_flags" {
+  template = file("templates/worker_kubelet_flags.sh")
+}
+
+resource "null_resource" "add_kubelet_flags_to_workers" {
+  count = var.worker_count
+  depends_on = [
+    null_resource.kube_vip_install_remaining_cp,
+    null_resource.deploy_anthos_cluster,
+    null_resource.kube_vip_install_first_cp
+  ]
+  connection {
+    type        = "ssh"
+    user        = "root"
+    private_key = chomp(tls_private_key.ssh_key_pair.private_key_pem)
+    host        = element(packet_device.worker_nodes.*.access_public_ipv4, count.index)
+  }
+  provisioner "remote-exec" {
+    inline = [
+      "mkdir -p /root/bootstrap/"
+    ]
+  }
+  provisioner "file" {
+    content     = data.template_file.worker_kubelet_flags.rendered
+    destination = "/root/bootstrap/worker_kubelet_flags.sh"
+  }
+  provisioner "remote-exec" {
+    inline = [
+      "bash /root/bootstrap/worker_kubelet_flags.sh"
+    ]
+  }
+}
+
 data "template_file" "ccm_secret" {
   template = file("templates/ccm_secret.yaml")
   vars = {
@@ -305,9 +343,7 @@ data "template_file" "ccm_secret" {
 
 resource "null_resource" "install_ccm" {
   depends_on = [
-    null_resource.kube_vip_install_remaining_cp,
-    null_resource.deploy_anthos_cluster,
-    null_resource.kube_vip_install_first_cp
+    null_resource.add_kubelet_flags_to_workers
   ]
   connection {
     type        = "ssh"
@@ -349,14 +385,6 @@ resource "null_resource" "install_kube_vip_daemonset" {
     inline = [
       "kubectl --kubeconfig /root/baremetal/bmctl-workspace/${local.cluster_name}/${local.cluster_name}-kubeconfig apply -f /root/bootstrap/kube_vip_ds.yaml"
     ]
-  }
-}
-
-resource "null_resource" "download_kube_config" {
-  depends_on = [null_resource.deploy_anthos_cluster]
-
-  provisioner "local-exec" {
-    command = "scp -i ~/.ssh/${local.ssh_key_name} -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null  root@${packet_device.control_plane.0.access_public_ipv4}:/root/baremetal/bmctl-workspace/${local.cluster_name}/${local.cluster_name}-kubeconfig ."
   }
 }
 
