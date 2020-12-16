@@ -1,4 +1,4 @@
-provider "packet" {
+provider "metal" {
   auth_token = var.auth_token
 }
 
@@ -8,7 +8,7 @@ resource "random_string" "cluster_suffix" {
   upper   = false
 }
 
-resource "packet_project" "new_project" {
+resource "metal_project" "new_project" {
   count           = var.create_project ? 1 : 0
   name            = var.project_name
   organization_id = var.organization_id
@@ -24,7 +24,7 @@ locals {
   timestamp           = timestamp()
   timestamp_sanitized = replace(local.timestamp, "/[- TZ:]/", "")
   ssh_key_name        = format("bm-cluster-%s", local.timestamp_sanitized)
-  project_id          = var.create_project ? packet_project.new_project[0].id : var.project_id
+  project_id          = var.create_project ? metal_project.new_project[0].id : var.project_id
 }
 
 resource "tls_private_key" "ssh_key_pair" {
@@ -32,7 +32,7 @@ resource "tls_private_key" "ssh_key_pair" {
   rsa_bits  = 4096
 }
 
-resource "packet_ssh_key" "ssh_pub_key" {
+resource "metal_ssh_key" "ssh_pub_key" {
   name       = local.cluster_name
   public_key = chomp(tls_private_key.ssh_key_pair.public_key_openssh)
 }
@@ -43,14 +43,14 @@ resource "local_file" "cluster_private_key_pem" {
   file_permission = "0600"
 }
 
-resource "packet_reserved_ip_block" "cp_vip" {
+resource "metal_reserved_ip_block" "cp_vip" {
   project_id  = local.project_id
   facility    = var.facility
   quantity    = 1
   description = format("Cluster: '%s' Contol Plane VIP", local.cluster_name)
 }
 
-resource "packet_reserved_ip_block" "ingress_vip" {
+resource "metal_reserved_ip_block" "ingress_vip" {
   project_id  = local.project_id
   facility    = var.facility
   quantity    = 1
@@ -64,9 +64,9 @@ data "template_file" "user_data" {
   }
 }
 
-resource "packet_device" "control_plane" {
+resource "metal_device" "control_plane" {
   depends_on = [
-    packet_ssh_key.ssh_pub_key
+    metal_ssh_key.ssh_pub_key
   ]
   count            = local.cp_count
   hostname         = format("%s-cp-%02d", local.cluster_name, count.index + 1)
@@ -79,9 +79,9 @@ resource "packet_device" "control_plane" {
   tags             = ["anthos", "baremetal", "control-plane"]
 }
 
-resource "packet_device" "worker_nodes" {
+resource "metal_device" "worker_nodes" {
   depends_on = [
-    packet_ssh_key.ssh_pub_key
+    metal_ssh_key.ssh_pub_key
   ]
   count            = var.worker_count
   hostname         = format("%s-worker-%02d", local.cluster_name, count.index + 1)
@@ -94,15 +94,15 @@ resource "packet_device" "worker_nodes" {
   tags             = ["anthos", "baremetal", "worker"]
 }
 
-resource "packet_bgp_session" "enable_cp_bgp" {
+resource "metal_bgp_session" "enable_cp_bgp" {
   count          = local.cp_count
-  device_id      = element(packet_device.control_plane.*.id, count.index)
+  device_id      = element(metal_device.control_plane.*.id, count.index)
   address_family = "ipv4"
 }
 
-resource "packet_bgp_session" "enable_worker_bgp" {
+resource "metal_bgp_session" "enable_worker_bgp" {
   count          = var.worker_count
-  device_id      = element(packet_device.worker_nodes.*.id, count.index)
+  device_id      = element(metal_device.worker_nodes.*.id, count.index)
   address_family = "ipv4"
 }
 
@@ -111,7 +111,7 @@ resource "null_resource" "write_ssh_private_key" {
     type        = "ssh"
     user        = "root"
     private_key = chomp(tls_private_key.ssh_key_pair.private_key_pem)
-    host        = packet_device.control_plane.0.access_public_ipv4
+    host        = metal_device.control_plane.0.access_public_ipv4
   }
 
   provisioner "file" {
@@ -128,10 +128,10 @@ data "template_file" "deploy_anthos_cluster" {
   vars = {
     cluster_name     = local.cluster_name
     operating_system = var.operating_system
-    cp_vip           = cidrhost(packet_reserved_ip_block.cp_vip.cidr_notation, 0)
-    ingress_vip      = cidrhost(packet_reserved_ip_block.ingress_vip.cidr_notation, 0)
-    cp_ips           = join(" ", packet_device.control_plane.*.access_private_ipv4)
-    worker_ips       = join(" ", packet_device.worker_nodes.*.access_private_ipv4)
+    cp_vip           = cidrhost(metal_reserved_ip_block.cp_vip.cidr_notation, 0)
+    ingress_vip      = cidrhost(metal_reserved_ip_block.ingress_vip.cidr_notation, 0)
+    cp_ips           = join(" ", metal_device.control_plane.*.access_private_ipv4)
+    worker_ips       = join(" ", metal_device.worker_nodes.*.access_private_ipv4)
     anthos_ver       = var.anthos_version
   }
 }
@@ -141,7 +141,7 @@ resource "null_resource" "prep_anthos_cluster" {
     type        = "ssh"
     user        = "root"
     private_key = chomp(tls_private_key.ssh_key_pair.private_key_pem)
-    host        = packet_device.control_plane.0.access_public_ipv4
+    host        = metal_device.control_plane.0.access_public_ipv4
   }
 
   provisioner "remote-exec" {
@@ -182,7 +182,7 @@ resource "null_resource" "deploy_anthos_cluster" {
     type        = "ssh"
     user        = "root"
     private_key = chomp(tls_private_key.ssh_key_pair.private_key_pem)
-    host        = packet_device.control_plane.0.access_public_ipv4
+    host        = metal_device.control_plane.0.access_public_ipv4
   }
 
   provisioner "file" {
@@ -201,7 +201,7 @@ resource "null_resource" "download_kube_config" {
   depends_on = [null_resource.deploy_anthos_cluster]
 
   provisioner "local-exec" {
-    command = "scp -i ~/.ssh/${local.ssh_key_name} -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null  root@${packet_device.control_plane.0.access_public_ipv4}:/root/baremetal/bmctl-workspace/${local.cluster_name}/${local.cluster_name}-kubeconfig ."
+    command = "scp -i ~/.ssh/${local.ssh_key_name} -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null  root@${metal_device.control_plane.0.access_public_ipv4}:/root/baremetal/bmctl-workspace/${local.cluster_name}/${local.cluster_name}-kubeconfig ."
   }
 }
 
@@ -210,7 +210,7 @@ data "template_file" "template_kube_vip_install" {
   template = file("templates/kube_vip_install.sh")
   vars = {
     cluster_name = local.cluster_name
-    eip          = cidrhost(packet_reserved_ip_block.cp_vip.cidr_notation, 0)
+    eip          = cidrhost(metal_reserved_ip_block.cp_vip.cidr_notation, 0)
     count        = count.index
     kube_vip_ver = var.kube_vip_version
     auth_token   = var.auth_token
@@ -220,15 +220,15 @@ data "template_file" "template_kube_vip_install" {
 
 resource "null_resource" "kube_vip_install_first_cp" {
   depends_on = [
-    packet_bgp_session.enable_cp_bgp,
-    packet_bgp_session.enable_worker_bgp,
+    metal_bgp_session.enable_cp_bgp,
+    metal_bgp_session.enable_worker_bgp,
     null_resource.prep_anthos_cluster,
   ]
   connection {
     type        = "ssh"
     user        = "root"
     private_key = chomp(tls_private_key.ssh_key_pair.private_key_pem)
-    host        = packet_device.control_plane.0.access_public_ipv4
+    host        = metal_device.control_plane.0.access_public_ipv4
   }
   provisioner "file" {
     content     = data.template_file.template_kube_vip_install.0.rendered
@@ -247,8 +247,8 @@ data "template_file" "add_remaining_cps" {
   template = file("templates/add_remaining_cps.sh")
   vars = {
     cluster_name = local.cluster_name
-    cp_2         = packet_device.control_plane.1.access_private_ipv4
-    cp_3         = packet_device.control_plane.2.access_private_ipv4
+    cp_2         = metal_device.control_plane.1.access_private_ipv4
+    cp_3         = metal_device.control_plane.2.access_private_ipv4
   }
 }
 
@@ -262,7 +262,7 @@ resource "null_resource" "add_remaining_cps" {
     type        = "ssh"
     user        = "root"
     private_key = chomp(tls_private_key.ssh_key_pair.private_key_pem)
-    host        = packet_device.control_plane.0.access_public_ipv4
+    host        = metal_device.control_plane.0.access_public_ipv4
   }
   provisioner "file" {
     content     = data.template_file.add_remaining_cps.0.rendered
@@ -284,7 +284,7 @@ resource "null_resource" "kube_vip_install_remaining_cp" {
     type        = "ssh"
     user        = "root"
     private_key = chomp(tls_private_key.ssh_key_pair.private_key_pem)
-    host        = element(packet_device.control_plane.*.access_public_ipv4, count.index + 1)
+    host        = element(metal_device.control_plane.*.access_public_ipv4, count.index + 1)
   }
   provisioner "remote-exec" {
     inline = ["mkdir -p /root/bootstrap"]
@@ -315,7 +315,7 @@ resource "null_resource" "add_kubelet_flags_to_workers" {
     type        = "ssh"
     user        = "root"
     private_key = chomp(tls_private_key.ssh_key_pair.private_key_pem)
-    host        = element(packet_device.worker_nodes.*.access_public_ipv4, count.index)
+    host        = element(metal_device.worker_nodes.*.access_public_ipv4, count.index)
   }
   provisioner "remote-exec" {
     inline = [
@@ -349,7 +349,7 @@ resource "null_resource" "install_ccm" {
     type        = "ssh"
     user        = "root"
     private_key = chomp(tls_private_key.ssh_key_pair.private_key_pem)
-    host        = packet_device.control_plane.0.access_public_ipv4
+    host        = metal_device.control_plane.0.access_public_ipv4
   }
   provisioner "file" {
     content     = data.template_file.ccm_secret.rendered
@@ -375,7 +375,7 @@ resource "null_resource" "install_kube_vip_daemonset" {
     type        = "ssh"
     user        = "root"
     private_key = chomp(tls_private_key.ssh_key_pair.private_key_pem)
-    host        = packet_device.control_plane.0.access_public_ipv4
+    host        = metal_device.control_plane.0.access_public_ipv4
   }
   provisioner "file" {
     content     = data.template_file.kube_vip_ds.rendered

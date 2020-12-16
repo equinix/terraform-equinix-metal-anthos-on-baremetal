@@ -11,7 +11,7 @@ Users are responsible for providing their Equinix Metal account, and Anthos subs
 
 The build (with default settings) typically takes 25-30 minutes.
 
-**The automation in the repo is COMMUNITY SUPPORTED ONLY**, if the installation succeeds, and you run the Anthos Platform Validation this cluster is production grade and supportable by Google for Anthos and packet for Infrastructure. If you have any questions please consult with Equinix Metal Support via a support ticket.
+**The automation in the repo is COMMUNITY SUPPORTED ONLY**, if the installation succeeds, and you run the Anthos Platform Validation this cluster is production grade and supportable by Google for Anthos and Equinix Metal for Infrastructure. If you have any questions please consult with Equinix Metal Support via a support ticket.
 
 ## Join us on Slack
 We use [Slack](https://slack.com/) as our primary communication tool for collaboration. You can join the Equinix Metal Community Slack group by going to [slack.equinixmetal.com](https://slack.equinixmetal.com/) and submitting your email address. You will receive a message with an invite link. Once you enter the Slack group, join the **#google-anthos** channel! Feel free to introduce yourself there, but know it's not mandatory.
@@ -24,7 +24,7 @@ This is the initial release of this project. We support Ubuntu 20.04, Ubuntu 18.
 To use these Terraform files, you need to have the following Prerequisites:
 * An [Anthos subscription](https://cloud.google.com/anthos/docs/getting-started)
 * Google Cloud service-account keys, check this [section](#-service-account-generation)
-* A Equinix Metal org-id and [API key](https://www.packet.com/developers/api/)
+* A Equinix Metal org-id and [API key](https://metal.equinix.com/developers/api/)
 
  
 ## Associated Equinix Metal Costs
@@ -120,7 +120,7 @@ Here is a quick command plus sample values to start file for you (make sure you 
 cat <<EOF >terraform.tfvars 
 auth_token = "cefa5c94-e8ee-4577-bff8-1d1edca93ed8" 
 organization_id = "42259e34-d300-48b3-b3e1-d5165cd14169" 
-project_name = "anthos-packet-project-1"
+project_name = "anthos-metal-project-1"
 cluster_name = "my-first-anthos-cluster"
 EOF
 ``` 
