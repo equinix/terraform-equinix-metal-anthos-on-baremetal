@@ -3,8 +3,8 @@ terraform {
     null = {
       source = "hashicorp/null"
     }
-    packet = {
-      source = "packethost/packet"
+    metal = {
+      source = "equinix/metal"
     }
     random = {
       source = "hashicorp/random"
