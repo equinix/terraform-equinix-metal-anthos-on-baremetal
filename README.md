@@ -97,7 +97,7 @@ rm -f terraform_0.14.2_linux_amd64.zip
 To download this project, run the following command:
 
 ```bash
-git clone https://github.com/c0dyhi11/terraform-metal-anthos-on-baremetal.git
+git clone https://github.com/equinix/terraform-metal-anthos-on-baremetal.git
 cd terraform-metal-anthos-on-baremetal
 ```
 
