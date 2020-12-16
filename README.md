@@ -5,7 +5,7 @@ These files will allow you to use [Terraform](http://terraform.io) to deploy [Go
 
 Terraform will create an Equinix Metal project complete with Linux machines for your Anthos on Baremetal cluster registered to Google Cloud. You can use an existing Equinix Metal Project, check this [section](#use-an-existing-equinix-metal-project) for instructions.
 
-![Environment Diagram](docs/images/google-anthos-vsphere-network-diagram-1.png)
+![Environment Diagram](docs/images/Google-Anthos-Baremetal-BGP-Network-Diagram.png)
 
 Users are responsible for providing their Equinix Metal account, and Anthos subscription as described in this readme.
 
