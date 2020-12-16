@@ -23,7 +23,7 @@ locals {
   cluster_name        = format("%s-%s", var.cluster_name, random_string.cluster_suffix.result)
   timestamp           = timestamp()
   timestamp_sanitized = replace(local.timestamp, "/[- TZ:]/", "")
-  ssh_key_name        = format("bm-cluster-%s", local.timestamp_sanitized)
+  ssh_key_name        = format("anthos-%s-%s", var.cluster_name, random_string.cluster_suffix.result)
   project_id          = var.create_project ? metal_project.new_project[0].id : var.project_id
 }
 
