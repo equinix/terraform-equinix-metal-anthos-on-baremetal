@@ -60,7 +60,6 @@ resource "metal_reserved_ip_block" "ingress_vip" {
 data "template_file" "user_data" {
   template = file("templates/user_data.sh")
   vars = {
-    operating_system = var.operating_system
   }
 }
 
