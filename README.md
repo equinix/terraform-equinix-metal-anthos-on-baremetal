@@ -141,6 +141,7 @@ EOF
 |     cluster_name       | string  |  equinix-metal-gke-cluster  | The name of the GKE cluster                             |
 |    create_project      | string  |           true              | Create a new project for this deployment?               |
 |     project_name       | string  |       baremetal-anthos      | The name of the project if 'create_project' is 'true'.  |
+|     gcp_keys_path      | string  |          util/keys          | The path to a directory with GCP service account keys   |
 |        bgp_asn         | string  |            65000            | BGP ASN to peer with Equinix Metal                      |
 |      ccm_version       | string  |           v2.0.0            | The version of the Equinix Metal CCM                    |
 |    kube_vip_version    | string  |            0.2.3            | The version of Kube-VIP to install                      |
