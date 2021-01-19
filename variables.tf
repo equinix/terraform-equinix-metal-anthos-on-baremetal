@@ -81,6 +81,12 @@ variable "project_name" {
   description = "The name of the project if 'create_project' is 'true'."
 }
 
+variable "gcp_keys_path" {
+  type        = string
+  default     = "util/keys"
+  description = "The path to a directory that contains the required GCP service account keys"
+}
+
 # Advanced Variables below this line
 
 variable "bgp_asn" {

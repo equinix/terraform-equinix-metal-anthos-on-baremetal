@@ -58,7 +58,7 @@ resource "metal_reserved_ip_block" "ingress_vip" {
 }
 
 data "template_file" "user_data" {
-  template = file("templates/user_data.sh")
+  template = file("${path.module}/templates/user_data.sh")
   vars = {
     operating_system = var.operating_system
   }
@@ -124,7 +124,7 @@ resource "null_resource" "write_ssh_private_key" {
 }
 
 data "template_file" "deploy_anthos_cluster" {
-  template = file("templates/pre_reqs.sh")
+  template = file("${path.module}/templates/pre_reqs.sh")
   vars = {
     cluster_name     = local.cluster_name
     operating_system = var.operating_system
@@ -152,7 +152,7 @@ resource "null_resource" "prep_anthos_cluster" {
   }
 
   provisioner "file" {
-    source      = "util/keys/"
+    source      = "${var.gcp_keys_path}/"
     destination = "/root/baremetal/keys"
   }
 
@@ -167,7 +167,7 @@ resource "null_resource" "prep_anthos_cluster" {
 }
 
 data "template_file" "create_cluster" {
-  template = file("templates/create_cluster.sh")
+  template = file("${path.module}/templates/create_cluster.sh")
   vars = {
     cluster_name = local.cluster_name
   }
@@ -207,7 +207,7 @@ resource "null_resource" "download_kube_config" {
 
 data "template_file" "template_kube_vip_install" {
   count    = var.ha_control_plane ? 2 : 1
-  template = file("templates/kube_vip_install.sh")
+  template = file("${path.module}/templates/kube_vip_install.sh")
   vars = {
     cluster_name = local.cluster_name
     eip          = cidrhost(metal_reserved_ip_block.cp_vip.cidr_notation, 0)
@@ -244,7 +244,7 @@ resource "null_resource" "kube_vip_install_first_cp" {
 
 data "template_file" "add_remaining_cps" {
   count    = var.ha_control_plane ? 1 : 0
-  template = file("templates/add_remaining_cps.sh")
+  template = file("${path.module}/templates/add_remaining_cps.sh")
   vars = {
     cluster_name = local.cluster_name
     cp_2         = metal_device.control_plane.1.access_private_ipv4
@@ -301,7 +301,7 @@ resource "null_resource" "kube_vip_install_remaining_cp" {
 }
 
 data "template_file" "worker_kubelet_flags" {
-  template = file("templates/worker_kubelet_flags.sh")
+  template = file("${path.module}/templates/worker_kubelet_flags.sh")
 }
 
 resource "null_resource" "add_kubelet_flags_to_workers" {
@@ -334,7 +334,7 @@ resource "null_resource" "add_kubelet_flags_to_workers" {
 }
 
 data "template_file" "ccm_secret" {
-  template = file("templates/ccm_secret.yaml")
+  template = file("${path.module}/templates/ccm_secret.yaml")
   vars = {
     auth_token = var.auth_token
     project_id = local.project_id
@@ -364,7 +364,7 @@ resource "null_resource" "install_ccm" {
 }
 
 data "template_file" "kube_vip_ds" {
-  template = file("templates/kube_vip_ds.yaml")
+  template = file("${path.module}/templates/kube_vip_ds.yaml")
 }
 
 resource "null_resource" "install_kube_vip_daemonset" {
