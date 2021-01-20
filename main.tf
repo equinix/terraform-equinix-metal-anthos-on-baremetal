@@ -394,4 +394,42 @@ resource "null_resource" "install_kube_vip_daemonset" {
     ]
   }
 }
-
+resource "null_resource" "worker_disks" {
+  count = var.worker_count
+  depends_on = [
+    null_resource.add_kubelet_flags_to_workers
+  ]
+  connection {
+    type        = "ssh"
+    user        = "root"
+    private_key = chomp(tls_private_key.ssh_key_pair.private_key_pem)
+    host        = element(metal_device.worker_nodes.*.access_public_ipv4, count.index)
+  }
+  provisioner "file" {
+    source      = "${path.module}/templates/device-name.sh"
+    destination = "/root/bootstrap/device-name.sh"
+  }
+  provisioner "remote-exec" {
+    inline = [
+      "bash /root/bootstrap/device-name.sh"
+    ]
+  }
+}
+resource "null_resource" "install_portworx" {
+  depends_on = [
+    null_resource.worker_disks
+  ]
+  connection {
+    type        = "ssh"
+    user        = "root"
+    private_key = chomp(tls_private_key.ssh_key_pair.private_key_pem)
+    host        = metal_device.control_plane.0.access_public_ipv4
+  }
+  provisioner "remote-exec" {
+    inline = [
+      "VER=$(kubectl version --short | awk -Fv '/Server Version: / {print $3}')",
+      "URL='https://install.portworx.com/${var.portworx_version}?mc=false&kbver=$VER&b=true&j=auto&kd=${urlencode("/dev/pwx_vg/pwxkvdb")}&c=${local.cluster_name}&stork=true&st=k8s",
+      "kubectl --kubeconfig /root/baremetal/bmctl-workspace/${local.cluster_name}/${local.cluster_name}-kubeconfig apply -f $URL"
+    ]
+  }
+}

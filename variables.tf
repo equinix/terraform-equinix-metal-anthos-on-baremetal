@@ -131,3 +131,8 @@ variable "kube_vip_daemonset_url" {
   description = "The deploy url for the Kube-VIP Daemonset"
 }
 
+variable "portworx_version" {
+  type        = string
+  description = "Portworx Version to install"
+  default     = "2.6"
+}
