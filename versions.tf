@@ -18,6 +18,10 @@ terraform {
     local = {
       source = "hashicorp/local"
     }
+    google = {
+      source  = "hashicorp/google"
+      version = "~>3.53.0"
+    }
   }
   required_version = ">= 0.13"
 }

@@ -1,15 +1,15 @@
-variable "auth_token" {
+variable "metal_auth_token" {
   type        = string
   description = "Equinix Metal API Key"
 }
 
-variable "project_id" {
+variable "metal_project_id" {
   type        = string
   default     = "null"
   description = "Equinix Metal Project ID"
 }
 
-variable "organization_id" {
+variable "metal_organization_id" {
   type        = string
   default     = "null"
   description = "Equinix Metal Organization ID"
@@ -69,16 +69,22 @@ variable "cluster_name" {
   description = "The GKE cluster name"
 }
 
-variable "create_project" {
+variable "metal_create_project" {
   type        = bool
   default     = true
-  description = "Create a Project if this is 'true'. Else use provided 'project_id'"
+  description = "Create a Metal Project if this is 'true'. Else use provided 'metal_project_id'"
 }
 
-variable "project_name" {
+variable "metal_project_name" {
   type        = string
   default     = "baremetal-anthos"
-  description = "The name of the project if 'create_project' is 'true'."
+  description = "The name of the Metal project if 'create_project' is 'true'."
+}
+
+variable "gcp_project_id" {
+  type        = string
+  default     = ""
+  description = "The GCP project ID to use"
 }
 
 variable "gcp_keys_path" {

@@ -1,5 +1,9 @@
 provider "metal" {
-  auth_token = var.auth_token
+  auth_token = var.metal_auth_token
+}
+
+provider "google" {
+  project = var.gcp_project_id
 }
 
 resource "random_string" "cluster_suffix" {
@@ -9,9 +13,9 @@ resource "random_string" "cluster_suffix" {
 }
 
 resource "metal_project" "new_project" {
-  count           = var.create_project ? 1 : 0
-  name            = var.project_name
-  organization_id = var.organization_id
+  count           = var.metal_create_project ? 1 : 0
+  name            = var.metal_project_name
+  organization_id = var.metal_organization_id
   bgp_config {
     deployment_type = "local"
     asn             = var.bgp_asn
@@ -24,7 +28,7 @@ locals {
   timestamp           = timestamp()
   timestamp_sanitized = replace(local.timestamp, "/[- TZ:]/", "")
   ssh_key_name        = format("anthos-%s-%s", var.cluster_name, random_string.cluster_suffix.result)
-  project_id          = var.create_project ? metal_project.new_project[0].id : var.project_id
+  metal_project_id    = var.metal_create_project ? metal_project.new_project[0].id : var.metal_project_id
 }
 
 resource "tls_private_key" "ssh_key_pair" {
@@ -44,14 +48,14 @@ resource "local_file" "cluster_private_key_pem" {
 }
 
 resource "metal_reserved_ip_block" "cp_vip" {
-  project_id  = local.project_id
+  project_id  = local.metal_project_id
   facility    = var.facility
   quantity    = 1
   description = format("Cluster: '%s' Contol Plane VIP", local.cluster_name)
 }
 
 resource "metal_reserved_ip_block" "ingress_vip" {
-  project_id  = local.project_id
+  project_id  = local.metal_project_id
   facility    = var.facility
   quantity    = 1
   description = format("Cluster: '%s' Ingress VIP", local.cluster_name)
@@ -74,7 +78,7 @@ resource "metal_device" "control_plane" {
   facilities       = [var.facility]
   operating_system = var.operating_system
   billing_cycle    = var.billing_cycle
-  project_id       = local.project_id
+  project_id       = local.metal_project_id
   user_data        = data.template_file.user_data.rendered
   tags             = ["anthos", "baremetal", "control-plane"]
 }
@@ -89,7 +93,7 @@ resource "metal_device" "worker_nodes" {
   facilities       = [var.facility]
   operating_system = var.operating_system
   billing_cycle    = var.billing_cycle
-  project_id       = local.project_id
+  project_id       = local.metal_project_id
   user_data        = data.template_file.user_data.rendered
   tags             = ["anthos", "baremetal", "worker"]
 }
@@ -137,6 +141,10 @@ data "template_file" "deploy_anthos_cluster" {
 }
 
 resource "null_resource" "prep_anthos_cluster" {
+  depends_on = [
+    google_project_service.enabled-apis
+  ]
+
   connection {
     type        = "ssh"
     user        = "root"
@@ -213,8 +221,8 @@ data "template_file" "template_kube_vip_install" {
     eip          = cidrhost(metal_reserved_ip_block.cp_vip.cidr_notation, 0)
     count        = count.index
     kube_vip_ver = var.kube_vip_version
-    auth_token   = var.auth_token
-    project_id   = local.project_id
+    auth_token   = var.metal_auth_token
+    project_id   = local.metal_project_id
   }
 }
 
@@ -240,7 +248,6 @@ resource "null_resource" "kube_vip_install_first_cp" {
     ]
   }
 }
-
 
 data "template_file" "add_remaining_cps" {
   count    = var.ha_control_plane ? 1 : 0
@@ -336,8 +343,8 @@ resource "null_resource" "add_kubelet_flags_to_workers" {
 data "template_file" "ccm_secret" {
   template = file("${path.module}/templates/ccm_secret.yaml")
   vars = {
-    auth_token = var.auth_token
-    project_id = local.project_id
+    auth_token = var.metal_auth_token
+    project_id = local.metal_project_id
   }
 }
 

@@ -29,6 +29,6 @@ output "Kubeconfig_location" {
 }
 
 output "Equinix_Metal_Project_ID" {
-  value       = local.project_id
-  description = "The project ID used for this deployment"
+  value       = local.metal_project_id
+  description = "The Metal project ID used for this deployment"
 }
