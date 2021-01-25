@@ -57,18 +57,3 @@ gcloud projects add-iam-policy-binding $PROJECT --member="serviceAccount:$SUPERA
 gcloud projects add-iam-policy-binding $PROJECT --member="serviceAccount:$SUPERADMIN@$PROJECT.iam.gserviceaccount.com" --role='roles/iam.serviceAccountKeyAdmin'
 gcloud projects add-iam-policy-binding $PROJECT --member="serviceAccount:$SUPERADMIN@$PROJECT.iam.gserviceaccount.com" --role='roles/resourcemanager.projectIamAdmin'
 gcloud projects add-iam-policy-binding $PROJECT --member="serviceAccount:$SUPERADMIN@$PROJECT.iam.gserviceaccount.com" --role='roles/editor'
-
-
-#enable the required APIs for the project
-gcloud services enable \
-    anthos.googleapis.com \
-    anthosgke.googleapis.com \
-    cloudresourcemanager.googleapis.com \
-    container.googleapis.com \
-    iam.googleapis.com \
-    gkeconnect.googleapis.com \
-    gkehub.googleapis.com \
-    serviceusage.googleapis.com \
-    stackdriver.googleapis.com \
-    monitoring.googleapis.com \
-    logging.googleapis.com --project $PROJECT
