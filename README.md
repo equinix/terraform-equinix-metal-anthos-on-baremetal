@@ -41,9 +41,9 @@ Select the version of Anthos you wish to install by setting the `anthos_version`
 
 
 ## Download/Create your GCP Keys for your service accounts
-The Anthos on Baremetal install requires several service accounts and keys to be created. See the [Google documentation](https://cloud.google.com/anthos/gke/docs/bare-metal/1.6/installing/install-prereq#service_accounts_prerequisites) for more details. You can create these keys manually, or use a provided helper script to make the keys for you (Recommended).
+The Anthos on Baremetal install requires several service accounts and keys to be created. See the [Google documentation](https://cloud.google.com/anthos/gke/docs/bare-metal/1.6/installing/install-prereq#service_accounts_prerequisites) for more details. By default, Terraform will create and manage these service accounts and keys for you (recommended). Alternatively, you can create these keys manually, or use a provided helper script to make the keys for you.
 
-The Terraform files expect the keys to use the following naming convention, matching that of the Google documentation:
+If you choose to manage the keys yourself, the Terraform files expect the keys to use the following naming convention, matching that of the Google documentation:
 ```
 util
 |_keys
@@ -51,7 +51,7 @@ util
   |_connect.json
   |_gcr.json
   |_register.json
-  |_super-admin.json
+  |_bmctl.json
 ```
 
 If doing so manually, you must create each of these keys and place it in a folder named `keys` within the `util` folder. 
@@ -64,6 +64,8 @@ You can run this script as follows:
 `util/setup_gcp_project.sh`
 
 Prompts will guide you through the setup.
+
+Note that if you choose to manage the service accounts and keys outside Terraform, you will need to provide the `gcp_keys_path` variable to Terraform (see table below).
  
 ## Install Terraform
 
@@ -140,7 +142,7 @@ EOF
 |  metal_create_project  | string  |            true             | Create a new project for this deployment?               |
 |   metal_project_name   | string  |       baremetal-anthos      | The name of the project if 'create_project' is 'true'.  |
 |    gcp_project_id      | string  |             n/a             | The GCP project ID to use                            .  |
-|     gcp_keys_path      | string  |          util/keys          | The path to a directory with GCP service account keys   |
+|     gcp_keys_path      | string  |             n/a             | The path to a directory with GCP service account keys   |
 |        bgp_asn         | string  |            65000            | BGP ASN to peer with Equinix Metal                      |
 |      ccm_version       | string  |           v2.0.0            | The version of the Equinix Metal CCM                    |
 |    kube_vip_version    | string  |            0.2.3            | The version of Kube-VIP to install                      |
