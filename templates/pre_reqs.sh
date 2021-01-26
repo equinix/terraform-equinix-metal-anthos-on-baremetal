@@ -95,7 +95,7 @@ sed -i "s|<path to GCR service account key>|/root/baremetal/keys/gcr.json|g" $cl
 sed -i "s|<path to SSH private key, used for node access>|/root/.ssh/id_rsa|g" $cluster_config
 sed -i "s|<path to Connect agent service account key>|/root/baremetal/keys/connect.json|g" $cluster_config
 sed -i "s|<path to Hub registration service account key>|/root/baremetal/keys/register.json|g" $cluster_config
-sed -i "s|<path to Cloud Operations service account key>|/root/baremetal/keys/cluster-ops.json|g" $cluster_config
+sed -i "s|<path to Cloud Operations service account key>|/root/baremetal/keys/cloud-ops.json|g" $cluster_config
 sed -i "s|type: admin|type: hybrid|g" $cluster_config
 sed -i "s|<GCP project ID>|$GCP_PROJECT_ID|g" $cluster_config
 sed -i "s|  - address: <Machine 3 IP>||g" $cluster_config
