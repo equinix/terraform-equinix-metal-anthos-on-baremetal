@@ -29,6 +29,11 @@ locals {
   timestamp_sanitized = replace(local.timestamp, "/[- TZ:]/", "")
   ssh_key_name        = format("anthos-%s-%s", var.cluster_name, random_string.cluster_suffix.result)
   metal_project_id    = var.metal_create_project ? metal_project.new_project[0].id : var.metal_project_id
+  gcr_sa_key          = var.gcp_keys_path == "" ? base64decode(google_service_account_key.gcr_sa_key[0].private_key) : file("${var.gcp_keys_path}/gcr.json")
+  connect_sa_key      = var.gcp_keys_path == "" ? base64decode(google_service_account_key.connect_sa_key[0].private_key) : file("${var.gcp_keys_path}/connect.json")
+  register_sa_key     = var.gcp_keys_path == "" ? base64decode(google_service_account_key.register_sa_key[0].private_key) : file("${var.gcp_keys_path}/register.json")
+  cloud_ops_sa_key    = var.gcp_keys_path == "" ? base64decode(google_service_account_key.cloud_ops_sa_key[0].private_key) : file("${var.gcp_keys_path}/cloud-ops.json")
+  bmctl_sa_key        = var.gcp_keys_path == "" ? base64decode(google_service_account_key.bmctl_sa_key[0].private_key) : file("${var.gcp_keys_path}/bmctl.json")
 }
 
 resource "tls_private_key" "ssh_key_pair" {
@@ -160,8 +165,28 @@ resource "null_resource" "prep_anthos_cluster" {
   }
 
   provisioner "file" {
-    source      = "${var.gcp_keys_path}/"
-    destination = "/root/baremetal/keys"
+    content     = local.gcr_sa_key
+    destination = "/root/baremetal/keys/gcr.json"
+  }
+
+  provisioner "file" {
+    content     = local.connect_sa_key
+    destination = "/root/baremetal/keys/connect.json"
+  }
+
+  provisioner "file" {
+    content     = local.register_sa_key
+    destination = "/root/baremetal/keys/register.json"
+  }
+
+  provisioner "file" {
+    content     = local.cloud_ops_sa_key
+    destination = "/root/baremetal/keys/cloud-ops.json"
+  }
+
+  provisioner "file" {
+    content     = local.bmctl_sa_key
+    destination = "/root/baremetal/keys/bmctl.json"
   }
 
   provisioner "file" {
