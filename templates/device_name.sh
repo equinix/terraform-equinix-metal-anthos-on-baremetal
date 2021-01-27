@@ -22,17 +22,14 @@ dev="/dev/$dskname"
 echo "pvcreate $dev"
 echo "vgcreate pwx_vg $dev"
 echo "lvcreate -l 100%FREE -n pwxkvdb pwx_vg"
-if $createlvm
-then
+if $createlvm; then
     pvcreate $dev
     vgcreate pwx_vg $dev
     lvcreate -l 100%FREE -n pwxkvdb pwx_vg
 fi
-if $deletelvm
-  then
+if $deletelvm; then
    lvremove /dev/pwx_vg/pwxkvdb
    vgremove pwx_vg
-   pvremove /dev/sdf
-   wipefs -a /dev/sdf
+   pvremove $dev
+   wipefs -a $dev
 fi
-
