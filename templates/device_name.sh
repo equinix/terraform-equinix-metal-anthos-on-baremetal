@@ -2,21 +2,18 @@
 createlvm=true
 deletelvm=false
 dsksize="0"
-disks=$(lsblk -f -d -b -n  -oNAME,SIZE,FSTYPE| egrep -v "xfs|ext3|ext4|btrfs|sr0")
-while IFS= read -r line
-do
-tmpsize=$(echo $line|awk {'print $2'})
-tmpname=$(echo $line|awk {'print $1'})
-  if [[ "$dsksize" = "0" ]]
-    then
-      dsksize=$tmpsize
-      dskname=$tmpname
-  elif [[ "$dsksize" -gt "$tmpsize" ]]
-    then
-      dsksize=$tmpsize
-      dskname=$tmpname
-  fi
-done <<< "$disks"
+
+function largest_free_disk {
+  lsblk -f -d -b -n -oNAME,SIZE | while read disk size; do
+    # ignore disks with filesystems
+    if ! lsblk -f -b -n  -oNAME,SIZE,FSTYPE -i /dev/$disk | egrep "xfs|ext3|ext4|btrfs|sr0" >/dev/null; then
+      echo -en "$disk $size"
+    fi
+  done | sort -n -k2 | head -n1 | cut -f1 -d" "
+}
+
+
+dskname=$(largest_free_disk)
 echo "Will use $dskname for Portworx KVDB LVM by running the following commands(will only run if createlvm=true)"
 dev="/dev/$dskname"
 echo "pvcreate $dev"
