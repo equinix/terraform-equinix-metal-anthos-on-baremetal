@@ -23,8 +23,9 @@ This is the initial release of this project. We support Ubuntu 20.04, Ubuntu 18.
 ## Prerequisites
 To use these Terraform files, you need to have the following Prerequisites:
 * An [Anthos subscription](https://cloud.google.com/anthos/docs/getting-started)
-* Google Cloud service-account keys, check this [section](#-service-account-generation)
+* Google Cloud command-line tool `gcloud` and Terraform installed and configured, see this [section](#install-tools)
 * A Equinix Metal org-id and [API key](https://metal.equinix.com/developers/api/)
+* Optionally, Google Cloud service-account keys, check this [section](#manage-your-gcp-keys-for-your-service-accounts)
 
  
 ## Associated Equinix Metal Costs
@@ -39,34 +40,26 @@ To simplify setup, this is designed to use manual LoadBalancing with [Kube-VIP](
 
 Select the version of Anthos you wish to install by setting the `anthos_version` variable in your terraform.tfvars file. 
 
+## Install tools
 
-## Download/Create your GCP Keys for your service accounts
-The Anthos on Baremetal install requires several service accounts and keys to be created. See the [Google documentation](https://cloud.google.com/anthos/gke/docs/bare-metal/1.6/installing/install-prereq#service_accounts_prerequisites) for more details. You can create these keys manually, or use a provided helper script to make the keys for you (Recommended).
+### Install gcloud
+The `gcloud` command-line tool is used to configure GCP for use by Terraform. Download and install the tool from the [download page](https://cloud.google.com/sdk/gcloud).
 
-The Terraform files expect the keys to use the following naming convention, matching that of the Google documentation:
+Once installed, run the following command to log in, configure the tool and your project:
+
 ```
-util
-|_keys
-  |_cluster-ops.json
-  |_connect.json
-  |_gcr.json
-  |_register.json
-  |_super-admin.json
+gcloud init
 ```
 
-If doing so manually, you must create each of these keys and place it in a folder named `keys` within the `util` folder. 
-The service accounts also need to have IAM roles assigned to each of them. To do this manually, you'll need to follow the [instructions from Google](https://cloud.google.com/anthos/gke/docs/bare-metal/1.6/installing/install-prereq#service_accounts_prerequisites)
+This will prompt you to select a GCP project that you will use to register the Anthos cluster. This project must be linked to an [Anthos subscription](https://cloud.google.com/anthos/docs/getting-started).
 
-Much easier (and recommended) is to use the helper script located in the `util` directory called `setup_gcp_project.sh` to create these keys and assign the IAM roles. The script will allow you to log into GCP with your user account and the GCP project for your Anthos cluster.
+Next, run the following command to configure credentials that can be used by Terraform:
 
-You can run this script as follows: 
-
-`util/setup_gcp_project.sh`
-
-Prompts will guide you through the setup.
+```
+gcloud auth application-default login
+```
  
-## Install Terraform
-
+### Install Terraform
 Terraform is just a single binary. Visit their [download page](https://www.terraform.io/downloads.html), choose your operating system, make the binary executable, and move it into your path.
 
 Here is an example for **macOS**:
@@ -89,6 +82,32 @@ sudo mv terraform /usr/local/bin/
 rm -f terraform_0.14.2_linux_amd64.zip
 ```
 
+## Manage your GCP Keys for your service accounts
+The Anthos on Baremetal install requires several service accounts and keys to be created. See the [Google documentation](https://cloud.google.com/anthos/gke/docs/bare-metal/1.6/installing/install-prereq#service_accounts_prerequisites) for more details. By default, Terraform will create and manage these service accounts and keys for you (recommended). Alternatively, you can create these keys manually, or use a provided helper script to make the keys for you.
+
+If you choose to manage the keys yourself, the Terraform files expect the keys to use the following naming convention, matching that of the Google documentation:
+```
+util
+|_keys
+  |_cloud-ops.json
+  |_connect.json
+  |_gcr.json
+  |_register.json
+  |_bmctl.json
+```
+
+If doing so manually, you must create each of these keys and place it in a folder named `keys` within the `util` folder.
+The service accounts also need to have IAM roles assigned to each of them. To do this manually, you'll need to follow the [instructions from Google](https://cloud.google.com/anthos/gke/docs/bare-metal/1.6/installing/install-prereq#service_accounts_prerequisites)
+
+Much easier (and recommended) is to use the helper script located in the `util` directory called `setup_gcp_project.sh` to create these keys and assign the IAM roles. The script will allow you to log into GCP with your user account and the GCP project for your Anthos cluster.
+
+You can run this script as follows:
+
+`util/setup_gcp_project.sh`
+
+Prompts will guide you through the setup.
+
+Note that if you choose to manage the service accounts and keys outside Terraform, you will need to provide the `gcp_keys_path` variable to Terraform (see table below).
  
 ## Download this project
 To download this project, run the following command:
@@ -103,7 +122,7 @@ Terraform uses modules to deploy infrastructure. In order to initialize the modu
 ```
 terraform init
 ```
-This should download six modules into a hidden directory `.terraform` 
+This should download seven modules into a hidden directory `.terraform`.
  
 ## Modify your variables 
 There are many variables which can be set to customize your install within `variables.tf`. The default variables to bring up a 6 node Anthos cluster with an HA Control Plane and three worker nodes using Equinix Metal's [c3.small.x86](https://metal.equinix.com/product/servers/). Change each default variable at your own risk. 
@@ -119,7 +138,7 @@ metal_auth_token = "cefa5c94-e8ee-4577-bff8-1d1edca93ed8"
 metal_organization_id = "42259e34-d300-48b3-b3e1-d5165cd14169"
 metal_project_name = "anthos-metal-project-1"
 gcp_project_id = "anthos-gcp-project-1"
-cluster_name = "my-first-anthos-cluster"
+cluster_name = "anthos-metal-1"
 EOF
 ``` 
 ### Available Variables
@@ -140,7 +159,7 @@ EOF
 |  metal_create_project  | string  |            true             | Create a new project for this deployment?               |
 |   metal_project_name   | string  |       baremetal-anthos      | The name of the project if 'create_project' is 'true'.  |
 |    gcp_project_id      | string  |             n/a             | The GCP project ID to use                            .  |
-|     gcp_keys_path      | string  |          util/keys          | The path to a directory with GCP service account keys   |
+|     gcp_keys_path      | string  |             n/a             | The path to a directory with GCP service account keys   |
 |        bgp_asn         | string  |            65000            | BGP ASN to peer with Equinix Metal                      |
 |      ccm_version       | string  |           v2.0.0            | The version of the Equinix Metal CCM                    |
 |    kube_vip_version    | string  |            0.2.3            | The version of Kube-VIP to install                      |

@@ -65,8 +65,12 @@ variable "billing_cycle" {
 
 variable "cluster_name" {
   type        = string
-  default     = "equinix-metal-gke-cluster"
+  default     = "eqnx-metal-gke"
   description = "The GKE cluster name"
+  validation {
+    condition     = length(var.cluster_name) <= 15
+    error_message = "Cluster name length must be 15 characters or less."
+  }
 }
 
 variable "metal_create_project" {
@@ -83,13 +87,12 @@ variable "metal_project_name" {
 
 variable "gcp_project_id" {
   type        = string
-  default     = ""
   description = "The GCP project ID to use"
 }
 
 variable "gcp_keys_path" {
   type        = string
-  default     = "util/keys"
+  default     = ""
   description = "The path to a directory that contains the required GCP service account keys"
 }
 
