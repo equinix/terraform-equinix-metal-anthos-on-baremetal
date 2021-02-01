@@ -17,8 +17,8 @@ The build (with default settings) typically takes 25-30 minutes.
 We use [Slack](https://slack.com/) as our primary communication tool for collaboration. You can join the Equinix Metal Community Slack group by going to [slack.equinixmetal.com](https://slack.equinixmetal.com/) and submitting your email address. You will receive a message with an invite link. Once you enter the Slack group, join the **#google-anthos** channel! Feel free to introduce yourself there, but know it's not mandatory.
 
 ## Latest Updates
-### 12-14-2020
-This is the initial release of this project. We support Ubuntu 20.04, Ubuntu 18.04, & CentOS 8. Red Hat Enterprise Linux is in the works. 
+
+See the [Releases](https://github.com/equinix/terraform-metal-anthos-on-baremetal/releases) page for a changelog describing the tagged releases.
 
 ## Prerequisites
 To use these Terraform files, you need to have the following Prerequisites:
