@@ -469,7 +469,7 @@ resource "null_resource" "install_portworx" {
   provisioner "remote-exec" {
     inline = [
       "VER=$(kubectl version --short | awk -Fv '/Server Version: / {print $3}')",
-      "URL='https://install.portworx.com/${var.portworx_version}?mc=false&kbver='$VER'&b=true&j=auto&kd=${urlencode("/dev/pwx_vg/pwxkvdb")}&c=${local.cluster_name}&stork=true&st=k8s'",
+      "URL='https://install.portworx.com/${var.portworx_version}?mc=false&kbver='$VER'&b=true&j=auto&kd=${urlencode("/dev/pwx_vg/pwxkvdb")}&c=${local.cluster_name}&stork=true&st=k8s&pp=IfNotPresent'",
       "kubectl --kubeconfig /root/baremetal/bmctl-workspace/${local.cluster_name}/${local.cluster_name}-kubeconfig apply -f $URL"
     ]
   }
