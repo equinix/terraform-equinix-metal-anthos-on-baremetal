@@ -24,6 +24,10 @@ resource "null_resource" "worker_disks" {
   }
 }
 
+locals {
+  portworx_version = try(length(var.portworx_version) ? var.portworx_version
+  : var.latest_portworx_version, var.latest_portworx_version)
+}
 
 resource "null_resource" "install_portworx" {
   depends_on = [
@@ -39,7 +43,7 @@ resource "null_resource" "install_portworx" {
   provisioner "remote-exec" {
     inline = [
       "VER=$(kubectl version --short | awk -Fv '/Server Version: / {print $3}')",
-      "URL='https://install.portworx.com/${var.portworx_version}?mc=false&kbver='$VER'&b=true&j=auto&kd=${urlencode("/dev/pwx_vg/pwxkvdb")}&c=${var.cluster_name}&stork=true&st=k8s&pp=IfNotPresent'",
+      "URL='https://install.portworx.com/${local.portworx_version}?mc=false&kbver='$VER'&b=true&j=auto&kd=${urlencode("/dev/pwx_vg/pwxkvdb")}&c=${var.cluster_name}&stork=true&st=k8s&pp=IfNotPresent'",
       "kubectl --kubeconfig ${var.ssh.kubeconfig} apply -f $URL"
     ]
   }

@@ -1,5 +1,11 @@
 variable "portworx_version" {
   type        = string
+  description = "The version of Portworx to install (latest_portworx_version will be used if not set)"
+  default     = ""
+}
+
+variable "latest_portworx_version" {
+  type        = string
   description = "The version of Portworx to install"
   default     = "2.6"
 }
