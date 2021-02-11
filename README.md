@@ -172,7 +172,7 @@ EOF
 | :------------------------: | :----------: |
 |          CentOS 8          |   centos_8   |
 |        Ubuntu 18.04        | ubuntu_18_04 |
-|        Ubutnu 20.04        | ubuntu_20_04 |
+|        Ubuntu 20.04        | ubuntu_20_04 |
 
 ##### Comming Soon
 |           Name             |   Api Slug   |
