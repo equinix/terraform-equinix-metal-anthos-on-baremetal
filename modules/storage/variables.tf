@@ -5,7 +5,7 @@ variable "storage_module" {
 
 variable "storage_options" {
   type        = any
-  description = "Options for the Storage provider module"
+  description = "Options for the Storage provider module. Option names can be found in the documentation for each module and are prefixed with the vendor name (\"portworx_version\")"
   default     = {}
 }
 

@@ -48,3 +48,23 @@ resource "null_resource" "install_portworx" {
     ]
   }
 }
+
+resource "null_resource" "license_portworx" {
+  count = length(var.portworx_license) > 0 ? 1 : 0
+
+  depends_on = [
+    null_resource.install_portworx
+  ]
+  connection {
+    type        = "ssh"
+    user        = var.ssh.user
+    private_key = var.ssh.private_key
+    host        = var.ssh.worker_addresses[0]
+  }
+
+  provisioner "remote-exec" {
+    inline = [
+      "/opt/pwx/bin/pxctl license activate ${var.portworx_license}"
+    ]
+  }
+}

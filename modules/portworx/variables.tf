@@ -4,6 +4,12 @@ variable "portworx_version" {
   default     = ""
 }
 
+variable "portworx_license" {
+  type        = string
+  description = "License key for Portworx (a Trial license is used by default)"
+  default     = ""
+}
+
 variable "latest_portworx_version" {
   type        = string
   description = "The version of Portworx to install"

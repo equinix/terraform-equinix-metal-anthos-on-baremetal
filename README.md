@@ -216,13 +216,16 @@ Changing or disabling a storage provider is not currently supported.
 
 To enable a storage module, set the `storage_module` variable to the name of the name of the included module.
 
-* `portworx`: To enable the [Pure Storage Portworx installation](modules/portworx/README), use the following settings in `terraform.tfvars`:
+* `portworx`: To enable the Pure Storage Portworx installation, use the following settings in `terraform.tfvars`:
 
   ```hcl
   storage_module = "portworx"
   storage_options = {
-    portworx_version = "2.6"
+    # portworx_version = "2.6"
+    # portworx_license = "c0ffe-fefe-activation-123"
   }
   ```
 
   When enabled, Portworx will manage the local disks attached to each worker node, providing a fault tolerant distributed storage solution.
+
+  [Read more about the Portworx module](modules/portworx/README).
