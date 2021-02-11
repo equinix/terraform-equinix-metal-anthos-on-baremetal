@@ -1,11 +1,11 @@
 resource "null_resource" "worker_disks" {
-  for_each = toset(var.ssh.worker_addresses)
+  count = length(var.ssh.worker_addresses)
 
   connection {
     type        = "ssh"
     user        = var.ssh.user
     private_key = var.ssh.private_key
-    host        = each.key
+    host        = var.ssh.worker_addresses[count.index]
   }
 
   provisioner "remote-exec" {
