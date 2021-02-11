@@ -210,7 +210,11 @@ Once Anthos is deployed on Equinix Metal, all of the documentation for using Goo
 
 ## Storage Providers
 
-Storage providers are made available through optional storage modules. These storage providers include CSI (Container Native Storage) `StorageClasses`.  To enable a storage module, set the `storage_module` variable to the name of the name of the included module.
+Storage providers are made available through optional storage modules. These storage providers include CSI (Container Native Storage) `StorageClasses`.
+
+Changing or disabling a storage provider is not currently supported.
+
+To enable a storage module, set the `storage_module` variable to the name of the name of the included module.
 
 * `portworx`: To enable the [Pure Storage Portworx installation](modules/portworx/README), use the following settings in `terraform.tfvars`:
 
