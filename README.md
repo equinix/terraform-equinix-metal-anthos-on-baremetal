@@ -208,12 +208,17 @@ metal_project_id                  = "YOUR-PROJECT-ID"
 ## Google Anthos Documentation
 Once Anthos is deployed on Equinix Metal, all of the documentation for using Google Anthos is located on the [Anthos Documentation Page](https://cloud.google.com/anthos/docs).
 
-## Pure Storage Portworx installation
+## Storage Providers
 
-Portworx by Pure Storage is a distributed and high available data storage that takes advantage of the local and attached storage provided on each Equinix Metal device.  Portworx includes a [Container Storage Interface (CSI)](https://kubernetes-csi.github.io/docs/) driver.
+Storage providers are made available through optional storage modules. These storage providers include CSI (Container Native Storage) `StorageClasses`.  To enable a storage module, set the `storage_module` variable to the name of the name of the included module.
 
-Portworx differentiates between device disks using priority labels that can be applied to create distinct `StorageClasses`. See [Portworx: Dynamic Provisioning](https://docs.portworx.com/portworx-install-with-kubernetes/storage-operations/create-pvcs/dynamic-provisioning/) for more details.
+* `portworx`: To enable the [Pure Storage Portworx installation](modules/portworx/README), use the following settings in `terraform.tfvars`:
 
-Login to any one of the Anthos cluster nodes and run `pxctl status` to check the portworx state or can run `kubectl get pods -lapp=portworx -n kube-system` to check if the portworx pods are running. Portworx logs can be viewed by running: `kubectl logs -lapp=portworx -n kube-system --all-containers`.
+  ```hcl
+  storage_module = "portworx"
+  storage_options = {
+    portworx_version = "2.6"
+  }
+  ```
 
-By default, Portworx 2.6 is installed in the Anthos Cluster.  The version of Portworx can be changed using the `portworx_version` variable.
+  When enabled, Portworx will manage the local disks attached to each worker node, providing a fault tolerant distributed storage solution.

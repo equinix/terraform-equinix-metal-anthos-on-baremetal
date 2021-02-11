@@ -131,8 +131,14 @@ variable "kube_vip_daemonset_url" {
   description = "The deploy url for the Kube-VIP Daemonset"
 }
 
-variable "portworx_version" {
+variable "storage_module" {
   type        = string
-  description = "Portworx Version to install"
-  default     = "2.6"
+  description = "The name of the storage module to enable. If set, use storage_options."
+  default     = ""
+}
+
+variable "storage_options" {
+  type        = any
+  description = "Options specific to the storage module. Check the documentation for the storage module for details."
+  default     = null
 }
