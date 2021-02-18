@@ -6,7 +6,7 @@ variable "portworx_version" {
 
 variable "portworx_license" {
   type        = string
-  description = "License key for Portworx (a Trial license is used by default)"
+  description = "License key for Portworx. A Trial license is used by default. Setting this value before Portworx is installed and ready will result in a failed `apply` that can be corrected by applying again after the Portworx install has completed."
   default     = ""
 }
 

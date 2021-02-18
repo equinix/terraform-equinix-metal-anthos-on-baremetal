@@ -30,3 +30,7 @@ To active the Portworx license through this module:
 
 * Set the `portworx_license` variable to your license key
 * Run `terraform apply`
+
+**Note**: The `portworx_license` variable can not be set and defined before the Portworx installation is ready. This takes about 15 minutes today.  If you attempt to provide the license too early the `terraform apply` will fail, affecting only this licensing task. A subsequent and successful `terraform apply` will be needed to correct the licensing.
+
+Alternatively, `ssh` into any worker node and run `/opt/pwx/bin/pxctl license activate _key_`.
