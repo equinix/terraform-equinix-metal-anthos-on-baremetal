@@ -140,8 +140,11 @@ metal_project_name = "anthos-metal-project-1"
 gcp_project_id = "anthos-gcp-project-1"
 cluster_name = "anthos-metal-1"
 EOF
-``` 
+```
 ### Available Variables
+
+A complete list of variables can be found at <https://registry.terraform.io/modules/equinix/anthos-on-baremetal/metal/latest?tab=inputs>.
+
 |    Variable Name       |  Type   |        Default Value        | Description                                             |
 | :--------------------: | :-----: | :-------------------------: | :------------------------------------------------------ |
 |   metal_auth_token     | string  |             n/a             | Equinix Metal API Key                                   |
@@ -166,6 +169,8 @@ EOF
 |      anthos_version    | string  |            1.6.0            | The version of Google Anthos to install                 |
 |     ccm_deploy_url     | string  | **Too Long to put here...** | The deploy url for the Equinix Metal CCM                |
 | kube_vip_daemonset_url | string  | **Too Long to put here...** | The deploy url for the Kube-VIP Daemonset               |
+| storage_provider | string | n/a | Enable a Storage module (example: "portworx") |
+| storage_options | map | n/a | Options specific to the storage module |
 
 #### Supported Operating Systems
 |            Name            |   Api Slug   |
