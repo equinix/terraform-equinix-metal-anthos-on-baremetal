@@ -145,6 +145,13 @@ data "template_file" "deploy_anthos_cluster" {
   }
 }
 
+data "template_file" "pre_reqs_worker" {
+  template = file("templates/pre_reqs_worker.sh")
+  vars = {
+    operating_system = var.operating_system
+  }
+}
+
 resource "null_resource" "prep_anthos_cluster" {
   depends_on = [
     google_project_service.enabled-apis
@@ -206,6 +213,9 @@ data "template_file" "create_cluster" {
   }
 }
 
+// Initialize Anthos on the first control plane node.
+// This will also trigger installs (including apt)
+// on the worker nodes.
 resource "null_resource" "deploy_anthos_cluster" {
   depends_on = [
     null_resource.prep_anthos_cluster,
@@ -420,3 +430,52 @@ resource "null_resource" "install_kube_vip_daemonset" {
   }
 }
 
+resource "null_resource" "worker_pre_reqs" {
+  count = var.worker_count
+  depends_on = [
+    null_resource.deploy_anthos_cluster,
+  ]
+
+  connection {
+    type        = "ssh"
+    user        = "root"
+    private_key = chomp(tls_private_key.ssh_key_pair.private_key_pem)
+    host        = element(metal_device.worker_nodes.*.access_public_ipv4, count.index)
+  }
+
+  provisioner "remote-exec" {
+    inline = ["mkdir -p /root/bootstrap/"]
+  }
+
+  # Unless /root/bootstrap/ is created in advance, this will be
+  # copied to /root/bootstrap (file)
+  # https://github.com/hashicorp/terraform/issues/16330
+  provisioner "file" {
+    content     = data.template_file.pre_reqs_worker.rendered
+    destination = "/root/bootstrap/pre_reqs_worker.sh"
+  }
+
+  provisioner "remote-exec" {
+    inline = ["bash /root/bootstrap/pre_reqs_worker.sh"]
+  }
+}
+
+module "storage" {
+  source = "./modules/storage"
+
+  depends_on = [
+    null_resource.add_kubelet_flags_to_workers,
+  ]
+
+  ssh = {
+    host             = metal_device.control_plane.0.access_public_ipv4
+    private_key      = chomp(tls_private_key.ssh_key_pair.private_key_pem)
+    user             = "root"
+    kubeconfig       = "/root/baremetal/bmctl-workspace/${local.cluster_name}/${local.cluster_name}-kubeconfig"
+    worker_addresses = metal_device.worker_nodes.*.access_public_ipv4
+  }
+
+  cluster_name    = local.cluster_name
+  storage_module  = var.storage_module
+  storage_options = var.storage_options
+}

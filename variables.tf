@@ -134,3 +134,14 @@ variable "kube_vip_daemonset_url" {
   description = "The deploy url for the Kube-VIP Daemonset"
 }
 
+variable "storage_module" {
+  type        = string
+  description = "The name of the storage module to enable. If set, use storage_options."
+  default     = ""
+}
+
+variable "storage_options" {
+  type        = any
+  description = "Options specific to the storage module. Check the documentation for the storage module for details."
+  default     = null
+}

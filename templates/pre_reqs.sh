@@ -54,7 +54,7 @@ EOM
 
 
 function unknown_os {
-    echo "I don't konw who I am" > /root/who_am_i.txt
+    echo "I don't know who I am" > /root/who_am_i.txt
 }
 
 if [ "$${OS:0:6}" = "centos" ] || [ "$${OS:0:4}" = "rhel" ]; then
