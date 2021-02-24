@@ -188,6 +188,9 @@ data "template_file" "create_cluster" {
   }
 }
 
+// Initialize Anthos on the first control plane node.
+// This will also trigger installs (including apt)
+// on the worker nodes.
 resource "null_resource" "deploy_anthos_cluster" {
   depends_on = [
     null_resource.prep_anthos_cluster,
@@ -404,6 +407,9 @@ resource "null_resource" "install_kube_vip_daemonset" {
 
 resource "null_resource" "worker_pre_reqs" {
   count = var.worker_count
+  depends_on = [
+    null_resource.deploy_anthos_cluster,
+  ]
 
   connection {
     type        = "ssh"
