@@ -146,7 +146,7 @@ data "template_file" "deploy_anthos_cluster" {
 }
 
 data "template_file" "pre_reqs_worker" {
-  template = file("templates/pre_reqs_worker.sh")
+  template = file("${path.module}/templates/pre_reqs_worker.sh")
   vars = {
     operating_system = var.operating_system
   }
