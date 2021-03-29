@@ -103,6 +103,61 @@ resource "metal_device" "worker_nodes" {
   tags             = ["anthos", "baremetal", "worker"]
 }
 
+data "template_file" "upgrade_centos" {
+  template = file("${path.module}/templates/upgrade_centos.sh")
+  vars = {
+    operating_system = var.operating_system
+    release_version  = "8.3.2011"
+  }
+}
+
+resource "null_resource" "upgrade_centos_cp" {
+  count = local.cp_count
+  connection {
+    type        = "ssh"
+    user        = "root"
+    private_key = chomp(tls_private_key.ssh_key_pair.private_key_pem)
+    host        = element(metal_device.control_plane.*.access_public_ipv4, count.index)
+  }
+  provisioner "remote-exec" {
+    inline = [
+      "mkdir -p /root/bootstrap/"
+    ]
+  }
+  provisioner "file" {
+    content     = data.template_file.upgrade_centos.rendered
+    destination = "/root/bootstrap/upgrade_centos.sh"
+  }
+  provisioner "remote-exec" {
+    inline = ["bash /root/bootstrap/upgrade_centos.sh"]
+  }
+}
+
+resource "null_resource" "upgrade_centos_worker" {
+  count = var.worker_count
+  connection {
+    type        = "ssh"
+    user        = "root"
+    private_key = chomp(tls_private_key.ssh_key_pair.private_key_pem)
+    host        = element(metal_device.worker_nodes.*.access_public_ipv4, count.index)
+  }
+
+  provisioner "remote-exec" {
+    inline = [
+      "mkdir -p /root/bootstrap/"
+    ]
+  }
+
+  provisioner "file" {
+    content     = data.template_file.upgrade_centos.rendered
+    destination = "/root/bootstrap/upgrade_centos.sh"
+  }
+
+  provisioner "remote-exec" {
+    inline = ["bash /root/bootstrap/upgrade_centos.sh"]
+  }
+}
+
 resource "metal_bgp_session" "enable_cp_bgp" {
   count          = local.cp_count
   device_id      = element(metal_device.control_plane.*.id, count.index)
@@ -154,7 +209,9 @@ data "template_file" "pre_reqs_worker" {
 
 resource "null_resource" "prep_anthos_cluster" {
   depends_on = [
-    google_project_service.enabled-apis
+    google_project_service.enabled-apis,
+    null_resource.upgrade_centos_cp,
+    null_resource.upgrade_centos_worker
   ]
 
   connection {
