@@ -6,7 +6,6 @@ function ubuntu_pre_reqs {
     sudo systemctl disable apparmor
     sudo systemctl stop ufw
     sudo systemctl disable ufw
-    
 }
 
 function rhel_pre_reqs {
