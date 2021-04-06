@@ -30,11 +30,6 @@ function ubuntu_pre_reqs {
 
 
 function rhel_pre_reqs {
-    # Disable Firewalld
-    sudo systemctl disable firewalld
-    sudo systemctl stop firewalld
-    # Disable SELinux
-    sudo setenforce 0
     sudo curl -Lo  /etc/yum.repos.d/docker-ce.repo https://download.docker.com/linux/centos/docker-ce.repo
 
     sudo tee -a /etc/yum.repos.d/google-cloud-sdk.repo << EOM
