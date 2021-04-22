@@ -2,10 +2,10 @@
 OS='${operating_system}'
 
 function ubuntu_pre_reqs {
-    sudo systemctl disable apparmor
     sudo systemctl stop apparmor
-    sudo systemctl disable ufw
+    sudo systemctl disable apparmor
     sudo systemctl stop ufw
+    sudo systemctl disable ufw
 }
 
 function rhel_pre_reqs {
