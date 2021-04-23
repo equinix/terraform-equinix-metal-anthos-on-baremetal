@@ -185,7 +185,7 @@ A complete list of variables can be found at <https://registry.terraform.io/modu
 |     anthos_version     | string  |            1.6.0            | The version of Google Anthos to install                 |
 |     ccm_deploy_url     | string  | **Too Long to put here...** | The deploy url for the Equinix Metal CCM                |
 | kube_vip_daemonset_url | string  | **Too Long to put here...** | The deploy url for the Kube-VIP Daemonset               |
-|    storage_provider    | string  |             n/a             | Enable a Storage module (example: "rook")               |
+|    storage_provider    | string  |             n/a             | Enable a Storage module (examples: "portworx", "rook")  |
 |    storage_options     |   map   |             n/a             | Options specific to the storage module                  |
 
 #### Supported Operating Systems
