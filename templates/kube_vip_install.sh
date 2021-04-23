@@ -55,6 +55,9 @@ wait_for_path "/var/lib/kubelet/kubeadm-flags.env"
 if [[ "$COUNT" == "0" ]]; then
     wait_for_path "/etc/kubernetes/admin.conf"
     wait_for_path "/root/baremetal/bmctl-workspace/$CLUSTER_NAME/$CLUSTER_NAME-kubeconfig"
+    mkdir -p /root/.kube/
+    cp /root/baremetal/bmctl-workspace/$CLUSTER_NAME/$CLUSTER_NAME-kubeconfig /root/.kube/config
+    chmod 0600 /root/.kube/config
     gen_kube_vip
 elif [[ "$COUNT" == "1" ]]; then
     wait_for_path "/etc/kubernetes/admin.conf"

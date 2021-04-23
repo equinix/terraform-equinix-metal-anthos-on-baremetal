@@ -185,7 +185,7 @@ A complete list of variables can be found at <https://registry.terraform.io/modu
 |     anthos_version     | string  |            1.6.0            | The version of Google Anthos to install                 |
 |     ccm_deploy_url     | string  | **Too Long to put here...** | The deploy url for the Equinix Metal CCM                |
 | kube_vip_daemonset_url | string  | **Too Long to put here...** | The deploy url for the Kube-VIP Daemonset               |
-|    storage_provider    | string  |             n/a             | Enable a Storage module (example: "portworx")           |
+|    storage_provider    | string  |             n/a             | Enable a Storage module (example: "rook")               |
 |    storage_options     |   map   |             n/a             | Options specific to the storage module                  |
 
 #### Supported Operating Systems
@@ -274,3 +274,15 @@ To enable a storage module, set the `storage_module` variable to the name of the
   When enabled, Portworx will manage the local disks attached to each worker node, providing a fault tolerant distributed storage solution.
 
   [Read more about the Portworx module](modules/portworx/README.md) ([also available on the Terraform Registry](https://registry.terraform.io/modules/equinix/anthos-on-baremetal/metal/latest/submodules/portworx)).
+
+- `rook`: To enable the Rook Ceph installation, use the following settings in `terraform.tfvars`:
+
+  ```hcl
+  storage_module = "rook"
+  storage_options = {
+    # rook_version = "v1.6.0"
+  }
+  ```
+When enabled, Rook Ceph will manage the local disks attached to each worker node, providing a fault tolerant distributed storage solution.
+
+  [Read more about the Rook module](modules/portworx/README.md) ([also available on the Terraform Registry](https://registry.terraform.io/modules/equinix/anthos-on-baremetal/metal/latest/submodules/rook)).
