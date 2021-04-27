@@ -118,7 +118,7 @@ variable "kube_vip_version" {
 
 variable "anthos_version" {
   type        = string
-  default     = "1.6.0"
+  default     = "1.7.0"
   description = "The version of Google Anthos to install"
 }
 
@@ -143,5 +143,5 @@ variable "storage_module" {
 variable "storage_options" {
   type        = any
   description = "Options specific to the storage module. Check the documentation for the storage module for details."
-  default     = null
+  default     = {}
 }

@@ -39,6 +39,7 @@ The default variables make use of 6 [c3.small.x86](https://metal.equinix.com/pro
 
 The Terraform has been successfully tested with following versions of Anthos on Baremetal:
 
+- 1.7.0
 - 1.6.0
 
 To simplify setup, this is designed to use manual LoadBalancing with [Kube-VIP](https://kube-vip.io) load balancer. No other load balancer support is planned at this time.
@@ -91,7 +92,7 @@ rm -f terraform_0.14.2_linux_amd64.zip
 
 ## Manage your GCP Keys for your service accounts
 
-The Anthos on Baremetal install requires several service accounts and keys to be created. See the [Google documentation](https://cloud.google.com/anthos/gke/docs/bare-metal/1.6/installing/install-prereq#service_accounts_prerequisites) for more details. By default, Terraform will create and manage these service accounts and keys for you (recommended). Alternatively, you can create these keys manually, or use a provided helper script to make the keys for you.
+The Anthos on Baremetal install requires several service accounts and keys to be created. See the [Google documentation](https://cloud.google.com/anthos/gke/docs/bare-metal/1.7/installing/install-prereq#service_accounts_prerequisites) for more details. By default, Terraform will create and manage these service accounts and keys for you (recommended). Alternatively, you can create these keys manually, or use a provided helper script to make the keys for you.
 
 If you choose to manage the keys yourself, the Terraform files expect the keys to use the following naming convention, matching that of the Google documentation:
 
@@ -106,7 +107,7 @@ util
 ```
 
 If doing so manually, you must create each of these keys and place it in a folder named `keys` within the `util` folder.
-The service accounts also need to have IAM roles assigned to each of them. To do this manually, you'll need to follow the [instructions from Google](https://cloud.google.com/anthos/gke/docs/bare-metal/1.6/installing/install-prereq#service_accounts_prerequisites)
+The service accounts also need to have IAM roles assigned to each of them. To do this manually, you'll need to follow the [instructions from Google](https://cloud.google.com/anthos/gke/docs/bare-metal/1.7/installing/install-prereq#service_accounts_prerequisites)
 
 Much easier (and recommended) is to use the helper script located in the `util` directory called `setup_gcp_project.sh` to create these keys and assign the IAM roles. The script will allow you to log into GCP with your user account and the GCP project for your Anthos cluster.
 
@@ -182,7 +183,7 @@ A complete list of variables can be found at <https://registry.terraform.io/modu
 |        bgp_asn         | string  |            65000            | BGP ASN to peer with Equinix Metal                      |
 |      ccm_version       | string  |           v2.0.0            | The version of the Equinix Metal CCM                    |
 |    kube_vip_version    | string  |            0.2.3            | The version of Kube-VIP to install                      |
-|     anthos_version     | string  |            1.6.0            | The version of Google Anthos to install                 |
+|     anthos_version     | string  |            1.7.0            | The version of Google Anthos to install                 |
 |     ccm_deploy_url     | string  | **Too Long to put here...** | The deploy url for the Equinix Metal CCM                |
 | kube_vip_daemonset_url | string  | **Too Long to put here...** | The deploy url for the Kube-VIP Daemonset               |
 |    storage_provider    | string  |             n/a             | Enable a Storage module (examples: "portworx", "rook")  |
