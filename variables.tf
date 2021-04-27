@@ -143,5 +143,5 @@ variable "storage_module" {
 variable "storage_options" {
   type        = any
   description = "Options specific to the storage module. Check the documentation for the storage module for details."
-  default     = null
+  default     = {}
 }
