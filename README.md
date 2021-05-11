@@ -286,4 +286,4 @@ To enable a storage module, set the `storage_module` variable to the name of the
   ```
 When enabled, Rook Ceph will manage the local disks attached to each worker node, providing a fault tolerant distributed storage solution.
 
-  [Read more about the Rook module](modules/portworx/README.md) ([also available on the Terraform Registry](https://registry.terraform.io/modules/equinix/anthos-on-baremetal/metal/latest/submodules/rook)).
+  [Read more about the Rook module](modules/rook/README.md) ([also available on the Terraform Registry](https://registry.terraform.io/modules/equinix/anthos-on-baremetal/metal/latest/submodules/rook)).
