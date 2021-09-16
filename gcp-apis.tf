@@ -1,15 +1,18 @@
 locals {
   enabled_apis = [
     "anthos.googleapis.com",
+    "anthosaudit.googleapis.com",
     "anthosgke.googleapis.com",
     "cloudresourcemanager.googleapis.com",
     "container.googleapis.com",
-    "iam.googleapis.com",
     "gkeconnect.googleapis.com",
-    "serviceusage.googleapis.com",
-    "stackdriver.googleapis.com",
+    "gkehub.googleapis.com",
+    "iam.googleapis.com",
+    "opsconfigmonitoring.googleapis.com",
+    "logging.googleapis.com",
     "monitoring.googleapis.com",
-    "logging.googleapis.com"
+    "serviceusage.googleapis.com",
+    "stackdriver.googleapis.com"
   ]
 }
 

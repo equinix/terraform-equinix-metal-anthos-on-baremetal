@@ -5,8 +5,9 @@ CP_VIP='${cp_vip}'
 INGRESS_VIP='${ingress_vip}'
 ANTHOS_VER='${anthos_ver}'
 IFS=' ' read -r -a CP_IPS <<< '${cp_ips}'
+IFS=' ' read -r -a CP_IDS <<< '${cp_ids}'
 IFS=' ' read -r -a WORKER_IPS <<< '${worker_ips}'
-
+IFS=' ' read -r -a WORKER_IDS <<< '${worker_ids}'
 
 function ubuntu_pre_reqs {
     # Install Docker
@@ -16,8 +17,8 @@ function ubuntu_pre_reqs {
     curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
     sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu focal stable" -y
     sudo apt-get update -qy
-    DOCKER_VERSION=`sudo apt-cache madison docker-ce | grep '19.03.15' | awk '{print $3}'`
-    DOCKER_CLI_VERSION=`sudo apt-cache madison docker-ce-cli | grep '19.03.15' | awk '{print $3}'`
+    DOCKER_VERSION=`sudo apt-cache madison docker-ce | grep '19.03.13' | awk '{print $3}'`
+    DOCKER_CLI_VERSION=`sudo apt-cache madison docker-ce-cli | grep '19.03.13' | awk '{print $3}'`
     sudo apt-get install docker-ce=$DOCKER_VERSION docker-ce-cli=$DOCKER_CLI_VERSION -qy
     sudo usermod -aG docker $USER
 
@@ -62,7 +63,7 @@ else
 fi
 
 # Install kubectl
-curl -LO "https://storage.googleapis.com/kubernetes-release/release/v1.18.6/bin/linux/amd64/kubectl"
+curl -LO "https://storage.googleapis.com/kubernetes-release/release/v1.20.9/bin/linux/amd64/kubectl"
 chmod a+x kubectl
 sudo mv kubectl /usr/local/bin/
 
@@ -80,9 +81,10 @@ chmod a+x bmctl
 bmctl_workspace='/root/baremetal/bmctl-workspace'
 cluster_config="$bmctl_workspace/$CLUSTER_NAME/$CLUSTER_NAME.yaml"
 GCP_PROJECT_ID=`grep 'project_id' /root/baremetal/keys/register.json | awk -F'"' '{print $4}'`
-cp_string="      - address: $${CP_IPS[0]}"$'\\n'
-for i in "$${WORKER_IPS[@]}"; do
-   worker_string="$worker_string  - address: $i"$'\\n'
+cp_string="      - address: $${CP_IPS[0]}"$'\\n'"        providerID: equinixmetal://$${CP_IDS[0]}"$'\\n'
+worker_count="$(($${#WORKER_IPS[@]}-1))"
+for i in $(seq 0 $worker_count); do
+   worker_string="$worker_string  - address: $${WORKER_IPS[$i]}"$'\\n'"    providerID: equinixmetal://$${WORKER_IDS[$i]}"$'\\n'
 done
 
 # Replace variables in cluster config
@@ -92,6 +94,7 @@ sed -i "s|<path to SSH private key, used for node access>|/root/.ssh/id_rsa|g" $
 sed -i "s|<path to Connect agent service account key>|/root/baremetal/keys/connect.json|g" $cluster_config
 sed -i "s|<path to Hub registration service account key>|/root/baremetal/keys/register.json|g" $cluster_config
 sed -i "s|<path to Cloud Operations service account key>|/root/baremetal/keys/cloud-ops.json|g" $cluster_config
+sed -i "s|name: $CLUSTER_NAME|name: $CLUSTER_NAME\\n  annotations:\\n    baremetal.cluster.gke.io/external-cloud-provider: \"true\"|g" $cluster_config
 sed -i "s|type: admin|type: hybrid|g" $cluster_config
 sed -i "s|<GCP project ID>|$GCP_PROJECT_ID|g" $cluster_config
 sed -i "s|  - address: <Machine 3 IP>||g" $cluster_config
@@ -101,5 +104,5 @@ sed -i "s|controlPlaneVIP: 10.0.0.8|controlPlaneVIP: $CP_VIP|g" $cluster_config
 sed -i "s|# ingressVIP: 10.0.0.2|ingressVIP: $INGRESS_VIP|g" $cluster_config
 sed -i "s|      - address: <Machine 1 IP>|$cp_string|g" $cluster_config
 sed -i "s|  - address: <Machine 2 IP>|$worker_string|g" $cluster_config
-sed -i "s|- 10.96.0.0/12|- 172.31.0.0/16|g" $cluster_config
+sed -i "s|- 10.96.0.0/20|- 172.31.0.0/16|g" $cluster_config
 sed -i "s|- 192.168.0.0/16|- 172.30.0.0/16|g" $cluster_config

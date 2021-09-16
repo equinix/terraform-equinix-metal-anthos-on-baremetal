@@ -69,9 +69,6 @@ wait_for_path "/root/bootstrap/vip.yaml"
 # Copy kube-vip manifest to the manifests folder
 cp /root/bootstrap/vip.yaml /etc/kubernetes/manifests/
 
-sed -i '/KUBELET_KUBEADM_ARGS/ s/"$/ --cloud-provider=external"/' /var/lib/kubelet/kubeadm-flags.env
-sudo systemctl restart kubelet
-
 if [[ "$COUNT" == "0" ]]; then
     printf "$${GREEN}BGP peering initiated! Cluster should be completed in about 5 minutes.$${NC}\n"
 fi

@@ -34,6 +34,7 @@ locals {
   register_sa_key     = var.gcp_keys_path == "" ? base64decode(google_service_account_key.register_sa_key[0].private_key) : file("${var.gcp_keys_path}/register.json")
   cloud_ops_sa_key    = var.gcp_keys_path == "" ? base64decode(google_service_account_key.cloud_ops_sa_key[0].private_key) : file("${var.gcp_keys_path}/cloud-ops.json")
   bmctl_sa_key        = var.gcp_keys_path == "" ? base64decode(google_service_account_key.bmctl_sa_key[0].private_key) : file("${var.gcp_keys_path}/bmctl.json")
+  ccm_deploy_url      = format("https://github.com/equinix/cloud-provider-equinix-metal/releases/download/%s/deployment.yaml", var.ccm_version)
 }
 
 resource "tls_private_key" "ssh_key_pair" {
@@ -140,7 +141,9 @@ data "template_file" "deploy_anthos_cluster" {
     cp_vip           = cidrhost(metal_reserved_ip_block.cp_vip.cidr_notation, 0)
     ingress_vip      = cidrhost(metal_reserved_ip_block.ingress_vip.cidr_notation, 0)
     cp_ips           = join(" ", metal_device.control_plane.*.access_private_ipv4)
+    cp_ids           = join(" ", metal_device.control_plane.*.id)
     worker_ips       = join(" ", metal_device.worker_nodes.*.access_private_ipv4)
+    worker_ids       = join(" ", metal_device.worker_nodes.*.id)
     anthos_ver       = var.anthos_version
   }
 }
@@ -289,8 +292,10 @@ data "template_file" "add_remaining_cps" {
   template = file("${path.module}/templates/add_remaining_cps.sh")
   vars = {
     cluster_name = local.cluster_name
-    cp_2         = metal_device.control_plane.1.access_private_ipv4
-    cp_3         = metal_device.control_plane.2.access_private_ipv4
+    cp_ip_2      = metal_device.control_plane.1.access_private_ipv4
+    cp_id_2      = metal_device.control_plane.1.id
+    cp_ip_3      = metal_device.control_plane.2.access_private_ipv4
+    cp_id_3      = metal_device.control_plane.2.id
   }
 }
 
@@ -342,39 +347,6 @@ resource "null_resource" "kube_vip_install_remaining_cp" {
   }
 }
 
-data "template_file" "worker_kubelet_flags" {
-  template = file("${path.module}/templates/worker_kubelet_flags.sh")
-}
-
-resource "null_resource" "add_kubelet_flags_to_workers" {
-  count = var.worker_count
-  depends_on = [
-    null_resource.kube_vip_install_remaining_cp,
-    null_resource.deploy_anthos_cluster,
-    null_resource.kube_vip_install_first_cp
-  ]
-  connection {
-    type        = "ssh"
-    user        = "root"
-    private_key = chomp(tls_private_key.ssh_key_pair.private_key_pem)
-    host        = element(metal_device.worker_nodes.*.access_public_ipv4, count.index)
-  }
-  provisioner "remote-exec" {
-    inline = [
-      "mkdir -p /root/bootstrap/"
-    ]
-  }
-  provisioner "file" {
-    content     = data.template_file.worker_kubelet_flags.rendered
-    destination = "/root/bootstrap/worker_kubelet_flags.sh"
-  }
-  provisioner "remote-exec" {
-    inline = [
-      "bash /root/bootstrap/worker_kubelet_flags.sh"
-    ]
-  }
-}
-
 data "template_file" "ccm_secret" {
   template = file("${path.module}/templates/ccm_secret.yaml")
   vars = {
@@ -385,7 +357,9 @@ data "template_file" "ccm_secret" {
 
 resource "null_resource" "install_ccm" {
   depends_on = [
-    null_resource.add_kubelet_flags_to_workers
+    null_resource.kube_vip_install_remaining_cp,
+    null_resource.deploy_anthos_cluster,
+    null_resource.kube_vip_install_first_cp
   ]
   connection {
     type        = "ssh"
@@ -400,7 +374,7 @@ resource "null_resource" "install_ccm" {
   provisioner "remote-exec" {
     inline = [
       "kubectl --kubeconfig /root/baremetal/bmctl-workspace/${local.cluster_name}/${local.cluster_name}-kubeconfig apply -f /root/bootstrap/ccm_secret.yaml",
-      "kubectl --kubeconfig /root/baremetal/bmctl-workspace/${local.cluster_name}/${local.cluster_name}-kubeconfig apply -f ${var.ccm_deploy_url}"
+      "kubectl --kubeconfig /root/baremetal/bmctl-workspace/${local.cluster_name}/${local.cluster_name}-kubeconfig apply -f ${local.ccm_deploy_url}"
     ]
   }
 }
@@ -447,9 +421,6 @@ resource "null_resource" "worker_pre_reqs" {
     inline = ["mkdir -p /root/bootstrap/"]
   }
 
-  # Unless /root/bootstrap/ is created in advance, this will be
-  # copied to /root/bootstrap (file)
-  # https://github.com/hashicorp/terraform/issues/16330
   provisioner "file" {
     content     = data.template_file.pre_reqs_worker.rendered
     destination = "/root/bootstrap/pre_reqs_worker.sh"
@@ -464,7 +435,7 @@ module "storage" {
   source = "./modules/storage"
 
   depends_on = [
-    null_resource.add_kubelet_flags_to_workers,
+    null_resource.install_ccm,
   ]
 
   ssh = {

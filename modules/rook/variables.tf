@@ -6,8 +6,8 @@ variable "rook_version" {
 
 variable "latest_rook_version" {
   type        = string
-  description = "The version of Rook to install"
-  default     = "v1.5.10"
+  description = "The latest version of Rook that has been tested"
+  default     = "v1.7.3"
 }
 
 variable "ssh" {

@@ -1,5 +1,5 @@
 variable "storage_module" {
-  description = "The name of the Storage provider module (ex. \"portworx\")"
+  description = "The name of the Storage provider module (ex. \"rook\")"
   default     = ""
 }
 

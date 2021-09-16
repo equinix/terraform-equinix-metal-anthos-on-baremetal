@@ -106,7 +106,7 @@ variable "bgp_asn" {
 
 variable "ccm_version" {
   type        = string
-  default     = "v2.0.0"
+  default     = "v3.2.2"
   description = "The version of the Equinix Metal CCM"
 }
 
@@ -118,19 +118,13 @@ variable "kube_vip_version" {
 
 variable "anthos_version" {
   type        = string
-  default     = "1.7.0"
+  default     = "1.8.3"
   description = "The version of Google Anthos to install"
-}
-
-variable "ccm_deploy_url" {
-  type        = string
-  default     = "https://gist.githubusercontent.com/thebsdbox/c86dd970549638105af8d96439175a59/raw/4abf90fb7929ded3f7a201818efbb6164b7081f0/ccm.yaml"
-  description = "The deploy url for the Equinix Metal CCM"
 }
 
 variable "kube_vip_daemonset_url" {
   type        = string
-  default     = "https://raw.githubusercontent.com/plunder-app/kube-vip/bb7d2da73eeb6c4712479b007ff931a12180e626/docs/manifests/kube-vip-em.yaml"
+  default     = "https://raw.githubusercontent.com/kube-vip/kube-vip/v0.3.8/docs/manifests/kube-vip-em.yaml"
   description = "The deploy url for the Kube-VIP Daemonset"
 }
 
