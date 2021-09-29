@@ -381,6 +381,9 @@ resource "null_resource" "install_ccm" {
 
 data "template_file" "kube_vip_ds" {
   template = file("${path.module}/templates/kube_vip_ds.yaml")
+  vars = {
+    kube_vip_ver = var.kube_vip_version
+  }
 }
 
 resource "null_resource" "install_kube_vip_daemonset" {

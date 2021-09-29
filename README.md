@@ -182,10 +182,9 @@ A complete list of variables can be found at <https://registry.terraform.io/modu
 |     gcp_keys_path      | string  |             n/a             | The path to a directory with GCP service account keys   |
 |        bgp_asn         | string  |            65000            | BGP ASN to peer with Equinix Metal                      |
 |      ccm_version       | string  |           v2.0.0            | The version of the Equinix Metal CCM                    |
-|    kube_vip_version    | string  |            0.2.3            | The version of Kube-VIP to install                      |
+|    kube_vip_version    | string  |            0.3.8            | The version of Kube-VIP to install                      |
 |     anthos_version     | string  |            1.7.0            | The version of Google Anthos to install                 |
 |     ccm_deploy_url     | string  | **Too Long to put here...** | The deploy url for the Equinix Metal CCM                |
-| kube_vip_daemonset_url | string  | **Too Long to put here...** | The deploy url for the Kube-VIP Daemonset               |
 |    storage_provider    | string  |             n/a             | Enable a Storage module (examples: "portworx", "rook")  |
 |    storage_options     |   map   |             n/a             | Options specific to the storage module                  |
 

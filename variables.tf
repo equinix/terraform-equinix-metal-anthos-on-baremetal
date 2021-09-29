@@ -112,7 +112,7 @@ variable "ccm_version" {
 
 variable "kube_vip_version" {
   type        = string
-  default     = "0.2.3"
+  default     = "0.3.8"
   description = "The version of Kube-VIP to use"
 }
 
@@ -120,12 +120,6 @@ variable "anthos_version" {
   type        = string
   default     = "1.8.3"
   description = "The version of Google Anthos to install"
-}
-
-variable "kube_vip_daemonset_url" {
-  type        = string
-  default     = "https://raw.githubusercontent.com/kube-vip/kube-vip/v0.3.8/docs/manifests/kube-vip-em.yaml"
-  description = "The deploy url for the Kube-VIP Daemonset"
 }
 
 variable "storage_module" {
