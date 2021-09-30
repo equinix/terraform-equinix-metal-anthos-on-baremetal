@@ -168,7 +168,7 @@ A complete list of variables can be found at <https://registry.terraform.io/modu
 |    metal_project_id    | string  |             n/a             | Equinix Metal Project ID                                |
 | metal_organization_id  | string  |            n/a.             | Equinix Metal Organization ID                           |
 |        hostname        | string  |      anthos-baremetal       | The hostname for nodes                                  |
-|        facility        | string  |            sv15             | Equinix Metal Facility to deploy into                   |
+|        facility        | string  |            ny5              | Equinix Metal Facility to deploy into                   |
 |        cp_plan         | string  |        c3.small.x86         | Equinix Metal device type to deploy control plane nodes |
 |      worker_plan       | string  |        c3.small.x86         | Equinix Metal device type to deploy for worker nodes    |
 |    ha_control_plane    | boolean |            true             | Do you want a highly available control plane?           |
@@ -181,9 +181,9 @@ A complete list of variables can be found at <https://registry.terraform.io/modu
 |     gcp_project_id     | string  |             n/a             | The GCP project ID to use .                             |
 |     gcp_keys_path      | string  |             n/a             | The path to a directory with GCP service account keys   |
 |        bgp_asn         | string  |            65000            | BGP ASN to peer with Equinix Metal                      |
-|      ccm_version       | string  |           v2.0.0            | The version of the Equinix Metal CCM                    |
+|      ccm_version       | string  |           v3.2.2            | The version of Cloud Provider Equinix Metal             |
 |    kube_vip_version    | string  |            0.3.8            | The version of Kube-VIP to install                      |
-|     anthos_version     | string  |            1.7.0            | The version of Google Anthos to install                 |
+|     anthos_version     | string  |            1.8.3            | The version of Google Anthos to install                 |
 |     ccm_deploy_url     | string  | **Too Long to put here...** | The deploy url for the Equinix Metal CCM                |
 |    storage_provider    | string  |             n/a             | Enable a Storage module (examples: "portworx", "rook")  |
 |    storage_options     |   map   |             n/a             | Options specific to the storage module                  |
