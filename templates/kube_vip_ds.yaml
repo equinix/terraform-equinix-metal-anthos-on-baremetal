@@ -82,7 +82,7 @@ spec:
       volumes:
       - name: cloud-sa-volume
         secret:
-          secretName: packet-cloud-config
+          secretName: metal-cloud-config
   updateStrategy: {}
 status:
   currentNumberScheduled: 0
