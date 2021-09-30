@@ -4,8 +4,8 @@ export EIP='${eip}'
 KUBE_VIP_VER='${kube_vip_ver}'
 CLUSTER_NAME='${cluster_name}'
 COUNT='${count}'
-PACKET_API_KEY='${auth_token}'
-PACKET_PROJECT_ID='${project_id}'
+METAL_API_KEY='${auth_token}'
+METAL_PROJECT_ID='${project_id}'
 GREEN='\033[0;32m' # Color green
 YELLOW='\033[0;33m' # Color green
 NC='\033[0m' # No Color
@@ -26,18 +26,16 @@ function wait_for_path() {
 }
 
 function gen_kube_vip () {
-    sudo docker run --network host --rm plndr/kube-vip:$KUBE_VIP_VER manifest pod \
+    sudo docker run --network host --rm ghcr.io/kube-vip/kube-vip:v$KUBE_VIP_VER manifest pod \
 	--interface lo \
 	--vip $EIP \
 	--port 6444 \
-        --controlplane \
+	--controlplane \
 	--bgp \
-	--packet \
-	--packetKey $PACKET_API_KEY \
-        --packetProjectID $PACKET_PROJECT_ID \
+	--metal \
+	--metalKey $METAL_API_KEY \
+        --metalProjectID $METAL_PROJECT_ID \
         | sudo tee /root/bootstrap/vip.yaml
-    # Hack until manifest doesn't include this path
-    sed  -i "/\/etc\/ssl\/certs/,+2 d" /root/bootstrap/vip.yaml
 }
 
 function wait_for_docker () {
@@ -68,9 +66,6 @@ fi
 wait_for_path "/root/bootstrap/vip.yaml"
 # Copy kube-vip manifest to the manifests folder
 cp /root/bootstrap/vip.yaml /etc/kubernetes/manifests/
-
-sed -i '/KUBELET_KUBEADM_ARGS/ s/"$/ --cloud-provider=external"/' /var/lib/kubelet/kubeadm-flags.env
-sudo systemctl restart kubelet
 
 if [[ "$COUNT" == "0" ]]; then
     printf "$${GREEN}BGP peering initiated! Cluster should be completed in about 5 minutes.$${NC}\n"

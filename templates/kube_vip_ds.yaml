@@ -64,7 +64,7 @@ spec:
           value: "true"
         - name: bgp_enable
           value: "true"
-        image: plndr/kube-vip:0.2.3
+        image: ghcr.io/kube-vip/kube-vip:v${kube_vip_ver}
         imagePullPolicy: Always
         name: kube-vip
         resources: {}

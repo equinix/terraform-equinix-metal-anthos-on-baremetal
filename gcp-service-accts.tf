@@ -70,6 +70,13 @@ resource "google_project_iam_member" "cloud_ops_sa_role_dashboard" {
   member = format("%s:%s", local.sa_text, google_service_account.cloud_ops_sa[count.index].email)
 }
 
+resource "google_project_iam_member" "cloud_ops_sa_role_metadata_writer" {
+  count  = local.sa_count
+  role   = "roles/opsconfigmonitoring.resourceMetadata.writer"
+  member = format("%s:%s", local.sa_text, google_service_account.cloud_ops_sa[count.index].email)
+}
+
+
 resource "google_project_iam_member" "bmctl_sa_compute" {
   count  = local.sa_count
   role   = "roles/compute.viewer"

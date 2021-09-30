@@ -1,12 +1,11 @@
 #!/bin/bash
 
 CLUSTER_NAME='${cluster_name}'
-CP_2='${cp_2}'
-CP_3='${cp_3}'
+CP_IP_2='${cp_ip_2}'
+CP_ID_2='${cp_id_2}'
+CP_IP_3='${cp_ip_3}'
+CP_ID_3='${cp_id_3}'
 
-# Wait a minute for things to settle
-#echo "Waiting for 60 seconds to let the cluster settle"
-#sleep 60
 kubectl \
     --kubeconfig /root/baremetal/bmctl-workspace/$CLUSTER_NAME/$CLUSTER_NAME-kubeconfig \
     -n cluster-$CLUSTER_NAME \
@@ -17,14 +16,16 @@ kubectl \
                 "op": "add",
                 "path": "/spec/controlPlane/nodePoolSpec/nodes/1",
                 "value": {
-                "address": "'$CP_2'"
+                    "address": "'$CP_IP_2'", 
+                    "providerID": "equinixmetal://'$CP_ID_2'"
                 }
             },
             {
                 "op": "add",
                 "path": "/spec/controlPlane/nodePoolSpec/nodes/2",
                 "value": {
-                "address": "'$CP_3'"
+                    "address": "'$CP_IP_3'",
+                    "providerID": "equinixmetal://'$CP_ID_3'"
                 }
             }
         ]'
