@@ -118,7 +118,7 @@ variable "kube_vip_version" {
 
 variable "anthos_version" {
   type        = string
-  default     = "1.8.3"
+  default     = "1.8.7"
   description = "The version of Google Anthos to install"
 }
 
