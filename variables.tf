@@ -106,7 +106,7 @@ variable "bgp_asn" {
 
 variable "ccm_version" {
   type        = string
-  default     = "v3.2.2"
+  default     = "v3.3.0"
   description = "The version of the Equinix Metal CCM"
 }
 
