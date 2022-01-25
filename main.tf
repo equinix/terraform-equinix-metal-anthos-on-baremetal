@@ -55,14 +55,14 @@ resource "local_file" "cluster_private_key_pem" {
 
 resource "metal_reserved_ip_block" "cp_vip" {
   project_id  = local.metal_project_id
-  facility    = var.facility
+  metro       = var.metro
   quantity    = 1
   description = format("Cluster: '%s' Contol Plane VIP", local.cluster_name)
 }
 
 resource "metal_reserved_ip_block" "ingress_vip" {
   project_id  = local.metal_project_id
-  facility    = var.facility
+  metro       = var.metro
   quantity    = 1
   description = format("Cluster: '%s' Ingress VIP", local.cluster_name)
 }
@@ -81,7 +81,7 @@ resource "metal_device" "control_plane" {
   count            = local.cp_count
   hostname         = format("%s-cp-%02d", local.cluster_name, count.index + 1)
   plan             = var.cp_plan
-  facilities       = [var.facility]
+  metro            = var.metro
   operating_system = var.operating_system
   billing_cycle    = var.billing_cycle
   project_id       = local.metal_project_id
@@ -96,7 +96,7 @@ resource "metal_device" "worker_nodes" {
   count            = var.worker_count
   hostname         = format("%s-worker-%02d", local.cluster_name, count.index + 1)
   plan             = var.worker_plan
-  facilities       = [var.facility]
+  metro            = var.metro
   operating_system = var.operating_system
   billing_cycle    = var.billing_cycle
   project_id       = local.metal_project_id

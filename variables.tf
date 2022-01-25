@@ -21,10 +21,10 @@ variable "hostname" {
   description = "Hostname for the nodes"
 }
 
-variable "facility" {
+variable "metro" {
   type        = string
-  default     = "ny5"
-  description = "Equinix Metal Facility to deploy into"
+  default     = "ny"
+  description = "Equinix Metal Metro to deploy into"
 }
 
 variable "cp_plan" {
