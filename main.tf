@@ -67,7 +67,49 @@ resource "metal_reserved_ip_block" "ingress_vip" {
   description = format("Cluster: '%s' Ingress VIP", local.cluster_name)
 }
 
-data "cloudinit_config" "user_data" {
+data "cloudinit_config" "cp_user_data" {
+  gzip          = false
+  base64_encode = false
+
+  part {
+    content_type = "text/x-shellscript"
+    content = templatefile("${path.module}/templates/user_data.sh", {
+      operating_system = var.operating_system
+    })
+  }
+
+  part {
+    content_type = "text/cloud-config"
+    content = templatefile("${path.module}/templates/cp-cloud-config.yaml", {
+      ssh_key          = chomp(tls_private_key.ssh_key_pair.private_key_pem)
+      gcr_sa_key       = local.gcr_sa_key
+      connect_sa_key   = local.connect_sa_key
+      register_sa_key  = local.register_sa_key
+      cloud_ops_sa_key = local.cloud_ops_sa_key
+      bmctl_sa_key     = local.bmctl_sa_key
+
+      create_cluster = templatefile("${path.module}/templates/create_cluster.sh", {
+        cluster_name = local.cluster_name
+      })
+
+      kube_vip_install = templatefile("${path.module}/templates/kube_vip_install.sh", {
+        cluster_name = local.cluster_name
+        eip          = cidrhost(metal_reserved_ip_block.cp_vip.cidr_notation, 0)
+        count        = 0
+        kube_vip_ver = var.kube_vip_version
+        auth_token   = var.metal_auth_token
+        project_id   = local.metal_project_id
+      })
+
+      ccm_secret = templatefile("${path.module}/templates/ccm_secret.yaml", {
+        auth_token = var.metal_auth_token
+        project_id = local.metal_project_id
+      })
+    })
+  }
+}
+
+data "cloudinit_config" "worker_user_data" {
   gzip          = false
   base64_encode = false
 
@@ -91,7 +133,7 @@ resource "metal_device" "control_plane" {
   operating_system = var.operating_system
   billing_cycle    = var.billing_cycle
   project_id       = local.metal_project_id
-  user_data        = data.cloudinit_config.user_data.rendered
+  user_data        = data.cloudinit_config.cp_user_data.rendered
   tags             = ["anthos", "baremetal", "control-plane"]
 }
 
@@ -106,7 +148,7 @@ resource "metal_device" "worker_nodes" {
   operating_system = var.operating_system
   billing_cycle    = var.billing_cycle
   project_id       = local.metal_project_id
-  user_data        = data.cloudinit_config.user_data.rendered
+  user_data        = data.cloudinit_config.worker_user_data.rendered
   tags             = ["anthos", "baremetal", "worker"]
 }
 
@@ -122,23 +164,6 @@ resource "metal_bgp_session" "enable_worker_bgp" {
   address_family = "ipv4"
 }
 
-resource "null_resource" "write_ssh_private_key" {
-  connection {
-    type        = "ssh"
-    user        = "root"
-    private_key = chomp(tls_private_key.ssh_key_pair.private_key_pem)
-    host        = metal_device.control_plane.0.access_public_ipv4
-  }
-
-  provisioner "file" {
-    content     = chomp(tls_private_key.ssh_key_pair.private_key_pem)
-    destination = "/root/.ssh/id_rsa"
-  }
-  provisioner "remote-exec" {
-    inline = ["chmod 0400 /root/.ssh/id_rsa"]
-  }
-}
-
 resource "null_resource" "prep_anthos_cluster" {
   depends_on = [
     google_project_service.enabled-apis
@@ -151,37 +176,6 @@ resource "null_resource" "prep_anthos_cluster" {
     host        = metal_device.control_plane.0.access_public_ipv4
   }
 
-  provisioner "remote-exec" {
-    inline = [
-      "mkdir -p /root/baremetal/keys/",
-      "mkdir -p /root/bootstrap/"
-    ]
-  }
-
-  provisioner "file" {
-    content     = local.gcr_sa_key
-    destination = "/root/baremetal/keys/gcr.json"
-  }
-
-  provisioner "file" {
-    content     = local.connect_sa_key
-    destination = "/root/baremetal/keys/connect.json"
-  }
-
-  provisioner "file" {
-    content     = local.register_sa_key
-    destination = "/root/baremetal/keys/register.json"
-  }
-
-  provisioner "file" {
-    content     = local.cloud_ops_sa_key
-    destination = "/root/baremetal/keys/cloud-ops.json"
-  }
-
-  provisioner "file" {
-    content     = local.bmctl_sa_key
-    destination = "/root/baremetal/keys/bmctl.json"
-  }
 
   provisioner "file" {
     content = templatefile("${path.module}/templates/pre_reqs.sh", {
@@ -209,7 +203,6 @@ resource "null_resource" "prep_anthos_cluster" {
 resource "null_resource" "deploy_anthos_cluster" {
   depends_on = [
     null_resource.prep_anthos_cluster,
-    null_resource.write_ssh_private_key
   ]
   connection {
     type        = "ssh"
@@ -217,14 +210,6 @@ resource "null_resource" "deploy_anthos_cluster" {
     private_key = chomp(tls_private_key.ssh_key_pair.private_key_pem)
     host        = metal_device.control_plane.0.access_public_ipv4
   }
-
-  provisioner "file" {
-    content = templatefile("${path.module}/templates/create_cluster.sh", {
-      cluster_name = local.cluster_name
-    })
-    destination = "/root/bootstrap/create_cluster.sh"
-  }
-
   provisioner "remote-exec" {
     inline = [
       "bash /root/bootstrap/create_cluster.sh"
@@ -252,17 +237,6 @@ resource "null_resource" "kube_vip_install_first_cp" {
     private_key = chomp(tls_private_key.ssh_key_pair.private_key_pem)
     host        = metal_device.control_plane.0.access_public_ipv4
   }
-  provisioner "file" {
-    content = templatefile("${path.module}/templates/kube_vip_install.sh", {
-      cluster_name = local.cluster_name
-      eip          = cidrhost(metal_reserved_ip_block.cp_vip.cidr_notation, 0)
-      count        = 0
-      kube_vip_ver = var.kube_vip_version
-      auth_token   = var.metal_auth_token
-      project_id   = local.metal_project_id
-    })
-    destination = "/root/bootstrap/kube_vip_install.sh"
-  }
   provisioner "remote-exec" {
     inline = [
       "bash /root/bootstrap/kube_vip_install.sh"
@@ -282,6 +256,7 @@ resource "null_resource" "add_remaining_cps" {
     private_key = chomp(tls_private_key.ssh_key_pair.private_key_pem)
     host        = metal_device.control_plane.0.access_public_ipv4
   }
+
   provisioner "file" {
     content = templatefile("${path.module}/templates/add_remaining_cps.sh", {
       cluster_name = local.cluster_name
@@ -344,13 +319,7 @@ resource "null_resource" "install_ccm" {
     private_key = chomp(tls_private_key.ssh_key_pair.private_key_pem)
     host        = metal_device.control_plane.0.access_public_ipv4
   }
-  provisioner "file" {
-    content = templatefile("${path.module}/templates/ccm_secret.yaml", {
-      auth_token = var.metal_auth_token
-      project_id = local.metal_project_id
-    })
-    destination = "/root/bootstrap/ccm_secret.yaml"
-  }
+
   provisioner "remote-exec" {
     inline = [
       "kubectl --kubeconfig /root/baremetal/bmctl-workspace/${local.cluster_name}/${local.cluster_name}-kubeconfig apply -f /root/bootstrap/ccm_secret.yaml",

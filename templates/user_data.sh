@@ -6,7 +6,6 @@ function ubuntu_pre_reqs {
     sudo systemctl disable apparmor
     sudo systemctl stop ufw
     sudo systemctl disable ufw
-    sudo apt-get install jq -y
 }
 
 function rhel_pre_reqs {
@@ -15,7 +14,6 @@ function rhel_pre_reqs {
     sudo systemctl stop firewalld
     # Disable SELinux
     sudo setenforce 0
-    dnf install jq -y
 }
 
 function bgp_routes {
