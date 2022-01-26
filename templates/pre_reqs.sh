@@ -10,6 +10,11 @@ IFS=' ' read -r -a WORKER_IPS <<< '${worker_ips}'
 IFS=' ' read -r -a WORKER_IDS <<< '${worker_ids}'
 
 function ubuntu_pre_reqs {
+    while sudo fuser /var/{lib/{dpkg,apt/lists},cache/apt/archives}/lock >/dev/null 2>&1; do
+        echo "Waiting for apt to be available..."
+        sleep 1
+    done
+
     # Install Docker
     export DEBIAN_FRONTEND=noninteractive
     sudo apt-get update -qy
