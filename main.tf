@@ -114,6 +114,10 @@ data "cloudinit_config" "worker_user_data" {
   base64_encode = false
 
   part {
+    content_type = "text/cloud-config"
+    content      = templatefile("${path.module}/templates/cloud-config.yaml", {})
+  }
+  part {
     content_type = "text/x-shellscript"
     content = templatefile("${path.module}/templates/user_data.sh", {
       operating_system = var.operating_system
@@ -348,35 +352,6 @@ resource "null_resource" "install_kube_vip_daemonset" {
     inline = [
       "kubectl --kubeconfig /root/baremetal/bmctl-workspace/${local.cluster_name}/${local.cluster_name}-kubeconfig apply -f /root/bootstrap/kube_vip_ds.yaml"
     ]
-  }
-}
-
-resource "null_resource" "worker_pre_reqs" {
-  count = var.worker_count
-  depends_on = [
-    null_resource.deploy_anthos_cluster,
-  ]
-
-  connection {
-    type        = "ssh"
-    user        = "root"
-    private_key = chomp(tls_private_key.ssh_key_pair.private_key_pem)
-    host        = element(metal_device.worker_nodes.*.access_public_ipv4, count.index)
-  }
-
-  provisioner "remote-exec" {
-    inline = ["mkdir -p /root/bootstrap/"]
-  }
-
-  provisioner "file" {
-    content = templatefile("${path.module}/templates/pre_reqs_worker.sh", {
-      operating_system = var.operating_system
-    })
-    destination = "/root/bootstrap/pre_reqs_worker.sh"
-  }
-
-  provisioner "remote-exec" {
-    inline = ["bash /root/bootstrap/pre_reqs_worker.sh"]
   }
 }
 
