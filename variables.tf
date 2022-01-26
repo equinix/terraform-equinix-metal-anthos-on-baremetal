@@ -112,7 +112,7 @@ variable "ccm_version" {
 
 variable "kube_vip_version" {
   type        = string
-  default     = "0.4.1"
+  default     = "0.3.9"
   description = "The version of Kube-VIP to use"
 }
 
