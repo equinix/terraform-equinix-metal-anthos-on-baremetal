@@ -1,0 +1,47 @@
+#cloud-config
+packages:
+- lvm2
+- jq
+
+runcmd:
+- mkdir -p /root/baremetal/keys /root/bootstrap
+
+write_files:
+- encoding: gzip+base64
+  path: /root/.ssh/id_rsa
+  permissions: '0400'
+  content: ${yamlencode(base64gzip(ssh_key))}
+
+- encoding: gzip+base64
+  path: /root/baremetal/keys/gcr.json
+  permissions: '0400'
+  content: ${yamlencode(base64gzip(gcr_sa_key))}
+- encoding: gzip+base64
+  path: /root/baremetal/keys/connect.json
+  permissions: '0400'
+  content: ${yamlencode(base64gzip(connect_sa_key))}
+- encoding: gzip+base64
+  path: /root/baremetal/keys/register.json
+  permissions: '0400'
+  content: ${yamlencode(base64gzip(register_sa_key))}
+- encoding: gzip+base64
+  path: /root/baremetal/keys/cloud-ops.json
+  permissions: '0400'
+  content: ${yamlencode(base64gzip(cloud_ops_sa_key))}
+- encoding: gzip+base64
+  path: /root/baremetal/keys/bmctl.json
+  permissions: '0400'
+  content: ${yamlencode(base64gzip(bmctl_sa_key))}
+
+- encoding: gzip+base64
+  path: /root/bootstrap/create_cluster.sh
+  permissions: '0600'
+  content: ${yamlencode(base64gzip(create_cluster))}
+- encoding: gzip+base64
+  path: /root/bootstrap/kube_vip_install.sh
+  permissions: '0600'
+  content: ${yamlencode(base64gzip(kube_vip_install))}
+- encoding: gzip+base64
+  path: /root/bootstrap/ccm_secret.yaml
+  permissions: '0600'
+  content: ${yamlencode(base64gzip(ccm_secret))}

@@ -14,7 +14,6 @@ function rhel_pre_reqs {
     sudo systemctl stop firewalld
     # Disable SELinux
     sudo setenforce 0
-    dnf install jq -y
 }
 
 function bgp_routes {

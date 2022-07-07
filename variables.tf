@@ -21,10 +21,10 @@ variable "hostname" {
   description = "Hostname for the nodes"
 }
 
-variable "facility" {
+variable "metro" {
   type        = string
-  default     = "ny5"
-  description = "Equinix Metal Facility to deploy into"
+  default     = "ny"
+  description = "Equinix Metal Metro to deploy into"
 }
 
 variable "cp_plan" {
@@ -106,19 +106,19 @@ variable "bgp_asn" {
 
 variable "ccm_version" {
   type        = string
-  default     = "v3.2.2"
+  default     = "v3.3.0"
   description = "The version of the Equinix Metal CCM"
 }
 
 variable "kube_vip_version" {
   type        = string
-  default     = "0.3.8"
+  default     = "0.4.2"
   description = "The version of Kube-VIP to use"
 }
 
 variable "anthos_version" {
   type        = string
-  default     = "1.8.3"
+  default     = "1.8.7"
   description = "The version of Google Anthos to install"
 }
 

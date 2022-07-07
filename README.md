@@ -166,9 +166,9 @@ A complete list of variables can be found at <https://registry.terraform.io/modu
 | :--------------------: | :-----: | :-------------------------: | :------------------------------------------------------ |
 |    metal_auth_token    | string  |             n/a             | Equinix Metal API Key                                   |
 |    metal_project_id    | string  |             n/a             | Equinix Metal Project ID                                |
-| metal_organization_id  | string  |            n/a.             | Equinix Metal Organization ID                           |
+| metal_organization_id  | string  |             n/a             | Equinix Metal Organization ID                           |
 |        hostname        | string  |      anthos-baremetal       | The hostname for nodes                                  |
-|        facility        | string  |            ny5              | Equinix Metal Facility to deploy into                   |
+|         metro          | string  |             ny              | Equinix Metal Metro to deploy into                      |
 |        cp_plan         | string  |        c3.small.x86         | Equinix Metal device type to deploy control plane nodes |
 |      worker_plan       | string  |        c3.small.x86         | Equinix Metal device type to deploy for worker nodes    |
 |    ha_control_plane    | boolean |            true             | Do you want a highly available control plane?           |
