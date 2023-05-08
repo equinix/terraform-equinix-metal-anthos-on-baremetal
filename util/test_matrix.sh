@@ -6,7 +6,7 @@ if [ "$1" = "apply" ]; then
     for os in "${operating_systems[@]}"; do
         mkdir -p $os
         short_name=`echo $os |sed "s/_//g"`
-        nohup terraform apply --auto-approve -state="./$os/terraform.tfstate" -var "operating_system=$os" -var "facility=sv15" -var "plan=c3.small.x86" -var "hostname=$short_name-anothos-baermetal" > ./$os/terraform.log &
+        nohup terraform apply --auto-approve -state="./$os/terraform.tfstate" -var "operating_system=$os" -var "metro=da" -var "plan=c3.small.x86" -var "hostname=$short_name-anothos-baermetal" > ./$os/terraform.log &
     done
 elif [ "$1" = "destroy" ]; then
     for os in "${operating_systems[@]}"; do
