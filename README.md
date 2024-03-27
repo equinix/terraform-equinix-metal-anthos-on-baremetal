@@ -138,6 +138,27 @@ terraform init
 
 This should download seven modules into a hidden directory `.terraform`.
 
+In case of any failures with Apple M1 chips, here are the steps to fix them.
+
+```sh
+brew install kreuzwerker/taps/m1-terraform-provider-helper
+m1-terraform-provider-helper activate # (In case you have not activated the helper)
+m1-terraform-provider-helper install hashicorp/template -v v2.2.0 # Compile and Install
+export TF_HELPER_LOG=debug # To enable more debugs
+export TF_HELPER_REQUEST_TIMEOUT=20
+m1-terraform-provider-helper install hashicorp/google -v v3.53.0 --custom-build-command="gofmt -s -w ./tools.go  && make fmt && make build"
+m1-terraform-provider-helper install hashicorp/google -v v3.53.0 
+```
+
+Run Terraform initialization again
+
+```sh
+rm -rf .terraform
+rm -f .terraform.lock.hcl
+terraform init -upgrade
+terraform providers lock -platform=linux_amd64 # Anycase want to update for different platforms.
+```
+
 ## Modify your variables
 
 There are many variables which can be set to customize your install within `variables.tf`. The default variables to bring up a 6 node Anthos cluster with an HA Control Plane and three worker nodes using Equinix Metal's [c3.small.x86](https://metal.equinix.com/product/servers/). Change each default variable at your own risk.
