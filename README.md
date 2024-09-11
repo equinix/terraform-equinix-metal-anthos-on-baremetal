@@ -1,4 +1,6 @@
-[![Equinix Metal Website](https://img.shields.io/badge/Website%3A-metal.equinix.com-blue)](http://metal.equinix.com) [![Slack Status](https://slack.equinixmetal.com/badge.svg)](https://slack.equinixmetal.com/) [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=flat-square)](http://makeapullrequest.com) ![](https://img.shields.io/badge/Stability-Experimental-red.svg)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=flat-square)](http://makeapullrequest.com)
+![](https://img.shields.io/badge/Stability-Experimental-red.svg)
+[![Equinix Community](https://img.shields.io/badge/Equinix%20Community%20-%20%23E91C24?logo=equinixmetal)](https://community.equinix.com)
 
 # Automated Anthos on Baremetal via Terraform for Equinix Metal
 
@@ -12,11 +14,7 @@ Users are responsible for providing their Equinix Metal account, and Anthos subs
 
 The build (with default settings) typically takes 25-30 minutes.
 
-**The automation in the repo is COMMUNITY SUPPORTED ONLY**, if the installation succeeds, and you run the Anthos Platform Validation this cluster is production grade and supportable by Google for Anthos and Equinix Metal for Infrastructure. If you have any questions please consult with Equinix Metal Support via a support ticket.
-
-## Join us on Slack
-
-We use [Slack](https://slack.com/) as our primary communication tool for collaboration. You can join the Equinix Metal Community Slack group by going to [slack.equinixmetal.com](https://slack.equinixmetal.com/) and submitting your email address. You will receive a message with an invite link. Once you enter the Slack group, join the **#google-anthos** channel! Feel free to introduce yourself there, but know it's not mandatory.
+**The automation in the repo is COMMUNITY SUPPORTED ONLY**, if the installation succeeds, and you run the Anthos Platform Validation this cluster is production grade and supportable by Google for Anthos and Equinix Metal for Infrastructure. If you have any questions please consult with the [Equinix Community](https://community.equinix.com/).
 
 ## Latest Updates
 
