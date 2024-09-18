@@ -1,5 +1,5 @@
 provider "equinix" {
-  auth_token = var.equinix_metal_auth_token
+  auth_token = var.metal_auth_token
 }
 
 provider "google" {
@@ -13,9 +13,9 @@ resource "random_string" "cluster_suffix" {
 }
 
 resource "equinix_metal_project" "new_project" {
-  count           = var.equinix_metal_create_project ? 1 : 0
-  name            = var.equinix_metal_project_name
-  organization_id = var.equinix_metal_organization_id
+  count           = var.metal_create_project ? 1 : 0
+  name            = var.metal_project_name
+  organization_id = var.metal_organization_id
   bgp_config {
     deployment_type = "local"
     asn             = var.bgp_asn
@@ -28,7 +28,7 @@ locals {
   timestamp           = timestamp()
   timestamp_sanitized = replace(local.timestamp, "/[- TZ:]/", "")
   ssh_key_name        = format("anthos-%s-%s", var.cluster_name, random_string.cluster_suffix.result)
-  metal_project_id    = var.equinix_metal_create_project ? equinix_metal_project.new_project[0].id : var.equinix_metal_project_id
+  metal_project_id    = var.metal_create_project ? equinix_metal_project.new_project[0].id : var.metal_project_id
   gcr_sa_key          = var.gcp_keys_path == "" ? base64decode(google_service_account_key.gcr_sa_key[0].private_key) : file("${var.gcp_keys_path}/gcr.json")
   connect_sa_key      = var.gcp_keys_path == "" ? base64decode(google_service_account_key.connect_sa_key[0].private_key) : file("${var.gcp_keys_path}/connect.json")
   register_sa_key     = var.gcp_keys_path == "" ? base64decode(google_service_account_key.register_sa_key[0].private_key) : file("${var.gcp_keys_path}/register.json")
@@ -97,12 +97,12 @@ data "cloudinit_config" "cp_user_data" {
         eip          = cidrhost(equinix_metal_reserved_ip_block.cp_vip.cidr_notation, 0)
         count        = 0
         kube_vip_ver = var.kube_vip_version
-        auth_token   = var.equinix_metal_auth_token
+        auth_token   = var.metal_auth_token
         project_id   = local.metal_project_id
       })
 
       ccm_secret = templatefile("${path.module}/templates/ccm_secret.yaml", {
-        auth_token = var.equinix_metal_auth_token
+        auth_token = var.metal_auth_token
         project_id = local.metal_project_id
       })
     })
@@ -298,7 +298,7 @@ resource "null_resource" "kube_vip_install_remaining_cp" {
       eip          = cidrhost(equinix_metal_reserved_ip_block.cp_vip.cidr_notation, 0)
       count        = 1
       kube_vip_ver = var.kube_vip_version
-      auth_token   = var.equinix_metal_auth_token
+      auth_token   = var.metal_auth_token
       project_id   = local.metal_project_id
     })
 

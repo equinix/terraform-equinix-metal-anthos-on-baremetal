@@ -1,15 +1,15 @@
-variable "equinix_metal_auth_token" {
+variable "metal_auth_token" {
   type        = string
   description = "Equinix Metal API Key"
 }
 
-variable "equinix_metal_project_id" {
+variable "metal_project_id" {
   type        = string
   default     = "null"
   description = "Equinix Metal Project ID"
 }
 
-variable "equinix_metal_organization_id" {
+variable "metal_organization_id" {
   type        = string
   default     = "null"
   description = "Equinix Metal Organization ID"
@@ -73,13 +73,13 @@ variable "cluster_name" {
   }
 }
 
-variable "equinix_metal_create_project" {
+variable "metal_create_project" {
   type        = bool
   default     = true
-  description = "Create a Metal Project if this is 'true'. Else use provided 'equinix_metal_project_id'"
+  description = "Create a Metal Project if this is 'true'. Else use provided 'metal_project_id'"
 }
 
-variable "equinix_metal_project_name" {
+variable "metal_project_name" {
   type        = string
   default     = "baremetal-anthos"
   description = "The name of the Metal project if 'create_project' is 'true'."
