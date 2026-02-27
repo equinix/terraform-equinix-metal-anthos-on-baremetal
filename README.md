@@ -2,6 +2,9 @@
 ![](https://img.shields.io/badge/Stability-Experimental-red.svg)
 [![Equinix Community](https://img.shields.io/badge/Equinix%20Community%20-%20%23E91C24?logo=equinixmetal)](https://community.equinix.com)
 
+> [!WARNING]
+> With the upcoming EoL of Equinix Metal on June 30, 2026, this repo is being archived on February 28, 2026.
+
 # Automated Anthos on Baremetal via Terraform for Equinix Metal
 
 These files will allow you to use [Terraform](http://terraform.io) to deploy [Google Cloud's Anthos on Baremetal](https://cloud.google.com/anthos) on [Equinix Metal's Bare Metal Cloud offering](http://metal.equinix.com).
