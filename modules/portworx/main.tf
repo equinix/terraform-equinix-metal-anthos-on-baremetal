@@ -42,8 +42,9 @@ resource "null_resource" "install_portworx" {
 
   provisioner "remote-exec" {
     inline = [
-      "VER=$(kubectl version --short | awk -Fv '/Server Version: / {print $3}')",
-      "URL='https://install.portworx.com/${local.portworx_version}?mc=false&kbver='$VER'&b=true&j=auto&kd=${urlencode("/dev/pwx_vg/pwxkvdb")}&c=${var.cluster_name}&stork=true&st=k8s&pp=IfNotPresent'",
+      "PX-OP='https://install.portworx.com/?comp=pxoperator'",
+      "URL='https://install.portworx.com/${local.portworx_version}?operator=true&mc=false&b=true&j=auto&kd=${urlencode("/dev/pwx_vg/pwxkvdb")}&c=${var.cluster_name}&stork=true&st=k8s&pp=IfNotPresent&csi=true&csida=true&gke=true'",
+      "kubectl --kubeconfig ${var.ssh.kubeconfig} apply -f - $PX-OP",
       "kubectl --kubeconfig ${var.ssh.kubeconfig} apply -f $URL"
     ]
   }
